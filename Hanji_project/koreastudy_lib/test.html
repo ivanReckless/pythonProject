@@ -1,0 +1,696 @@
+
+
+
+
+
+
+<!DOCTYPE html>
+<html lang="ko">
+	<head>
+		<meta charset="UTF-8">
+		<meta name="keywords" content="">
+		<meta http-equiv="X-UA-Compatible" content="IE=Edge">
+		<meta name="format-detection" content="telephone=no">
+		
+		<title>소장자료 검색서비스</title>
+		<link rel="stylesheet" type="text/css" href="/resources/css/site/font.css"/>
+		<link rel="stylesheet" type="text/css" href="/resources/css/site/default.css"/>
+		<link rel="stylesheet" type="text/css" href="/resources/css/site/common.css"/>
+		<link rel="stylesheet" type="text/css" href="/resources/css/site/main.css"/>
+		<link rel="stylesheet" type="text/css" href="/resources/css/site/sub.css"/>
+		<link rel="stylesheet" type="text/css" href="/resources/css/site/mmenu.css"/> 
+
+		<script type="text/javascript"	src="/resources/js/comm/jquery-1.11.3.min.js"></script>
+		<script type="text/javascript"	src="/resources/js/comm/ubnCommon.js"></script>
+		
+		
+		<script type="text/javascript"	src="/resources/js/webime/common.js"></script>
+		<script type="text/javascript"	src="/resources/js/webime/search.js"></script>
+		
+		<!-- Global site tag (gtag.js) - Google Analytics -->
+		<script async src="https://www.googletagmanager.com/gtag/js?id=UA-30118014-22"></script>
+		<script>
+			window.dataLayer = window.dataLayer || [];
+			function gtag(){dataLayer.push(arguments);}
+			gtag('js', new Date());
+			gtag('config', 'UA-30118014-22');
+		</script>
+		
+		<script type="text/javascript">
+			
+			var g_servletPath = "http://search.koreastudy.or.kr:80";
+			
+			$(document).ready(function(){
+				$('#toggle').click(function() {
+					$(this).toggleClass('active');
+					$('#overlay').toggleClass('open');
+				});  
+				
+				$('#overlay').click(function() {
+					$('#toggle').click();
+				});
+			});
+			
+			$(document).ready(function(){
+				$(".pop_con").css("display","none");
+				$(".pop_close").css("cursor","pointer");
+	
+				$('#mask, .pop_close').click(function () {
+					$("body").css("overflow", "auto");
+					$("#mask").hide();
+					$('#campus_pop').hide();
+					$("#campus_pop").children("div.pop_con").css("display","none");
+				});
+				
+				/* Header Menu */
+				$(".topMenuLi").mouseover(function(){
+					$(".dep2").hide();
+					$(this).children(".dep2").show();
+				});
+			});
+			function clickArea(num){
+				$("body").css("overflow", "hidden");
+				$(".pop_con").css("display","none");
+				$("#campus_pop").children("div.pop_con").eq(num).css("display","block");
+	
+				var maskHeight = $(document).height();
+				var maskWidth = $(window).width();
+	
+				$('#mask').css({'width':maskWidth,'height':maskHeight});
+				$('#mask').fadeTo("fast",0.6);
+	
+				$('#campus_pop');
+				$('#campus_pop').show();
+			}
+		</script>
+		
+		<script type="text/javascript">
+			function fn_setPage(page){
+				fn_goPage(page, "", "", "", "", "");
+			}
+		
+			function fn_goPage(page, searchGbn, clltsrcNm, dataTypeCd, typeClss, cltrastDvsCd){
+				$("[name='pageIndex']","[name='listForm']").val(page);
+				$("[name='searchGbn']","[name='listForm']").val(searchGbn);
+				$("[name='clltsrc_nm']","[name='listForm']").val(clltsrcNm);
+				$("[name='schc_data_type_cd']","[name='listForm']").val(dataTypeCd);
+				$("[name='type_clss_cd']","[name='listForm']").val(typeClss);
+				$("[name='cltrast_dvs_cd']","[name='listForm']").val(cltrastDvsCd);
+				
+				if("" == "initial" || "/search/view" == "/possesion/initial/list" || "/search/view" == "/page/intro"){
+					$("[name='listForm']").attr("action", "/possesion/initial/list");	
+				}else{
+					$("[name='listForm']").attr("action", "/possesion//list");
+				}
+				
+				
+				$("[name='listForm']").submit();
+			}
+		  
+			$(document).ready(function(){
+				$(".dataTypeCls").click(function(){
+					fn_goPage(1, "", "", $(this).data("type") == "all" ? "" : $(this).data("type"), "", ""); 
+				});
+				
+				$(".searchGbnCls").click(function(){
+// 					$(".dep2").hide();
+					var prtObj = $(this).parent();
+					if("" == "initial" || "/search/view" == "/possesion/initial/list" || "/search/view" == "/page/intro"){
+						
+						if($(this).attr("class").indexOf("on") == -1){ // 오픈되지 않았을때
+//	 						$(".schcDataTypeCdCls").removeClass("on");
+	 						$(this).addClass("on");
+							if(prtObj.find(".dep2 li").length == 0){
+								var orgObj = $(this);
+								var searchgbn = orgObj.data("searchgbn");
+								fn_openMask("정보를 불러오는 중입니다.");
+								$.ajax({
+									url:"/m/possesion/ajax/getInitial"
+									,data:{searchGbn:searchgbn}
+									,success:function(res){
+										var appendStr = '';
+										$.each(res, function(i, data){
+											appendStr += '<li><a href="#none" class="clltsrcCls '+("" == data.menu_nm ? "on" : "")+'" data-clltsrc="'+data.menu_nm+'"  data-listtype="initial">- '+data.menu_nm+'</a></li>';
+										});  
+										
+										prtObj.find(".dep2").append(
+											appendStr
+						                );	
+										
+										$(".clltsrcCls").click(function(){
+		// 									console.log($(this).parent().parent().parent().find(".searchGbnCls").data("searchgbn"), $(this).data("clltsrc"));
+							 				fn_goPage(1, $(this).parent().parent().parent().find(".searchGbnCls").data("searchgbn"), $(this).data("clltsrc"), "", "", "");  
+										});
+										
+										if(appendStr != ""){
+											prtObj.find(".dep2").show();	
+										}else{
+											orgObj.removeClass("on");
+											alert("["+orgObj.data("searchgbn")+"] 로 시작하는 기탁문중이 없습니다.");
+										}
+							        }
+								});	
+							}else{
+// 								$(this).removeClass("on");
+								prtObj.find(".dep2").toggle();
+							}	
+						}else{ // 오픈되어있을때
+							
+							if(prtObj.find(".dep2").find("li").length != 0){
+								$(this).removeClass("on");  
+								prtObj.find(".dep2").toggle();	
+							}
+// 							prtObj.find(".dep2").toggle();	
+						}
+					}else{
+						prtObj.find(".dep2").toggle();	
+					}
+					
+					
+	// 				console.log($(this).parent().find(".dep2"));
+	// 				fn_goPage(1, $(this).data("searchgbn"), "", "", ""); 
+				});
+				  
+				$(".clltsrcCls").click(function(){
+					fn_goPage(1, $(this).parent().parent().parent().find(".searchGbnCls").data("searchgbn"), $(this).data("clltsrc"), "", "", ""); 
+				});
+				
+				$(".cltrastDvsCdCls").click(function(){
+					$(".dep2").hide();
+	// 				$(this).parent().find(".dep2").toggle();
+					fn_goPage(1, "", "", "", "", $(this).data("cltrastcd")); 
+				});  
+				
+				$(".schcDataTypeCdCls").click(function(){
+					
+					if($(this).attr("class").indexOf("on") == -1){ // 오픈되지 않았을때
+						//$(".schcDataTypeCdCls").removeClass("on");
+						$(this).addClass("on");
+						if($(this).parent().find(".dep2 li").length == 0){
+							fn_goPage(1, "", "", $(this).data("schcdatatypecd"), "", "");	
+						}else{
+							$(this).parent().find(".dep2").toggle();	
+						}	
+					}else{ // 오픈되어있을때
+						$(this).removeClass("on");
+						$(this).parent().find(".dep2").toggle();	
+					}
+				});
+				
+				$(".typeclssCls").click(function(){
+	// 				$(".dep2").hide();
+	// 				$(this).parent().find(".dep2").toggle();
+					fn_goPage(1, "", "", $(this).parent().parent().parent().find(".schcDataTypeCdCls").data("schcdatatypecd"), $(this).data("typeclsscd"), ""); 
+				});  
+				
+				$("[name='recordCountPerPage'],[name='listOrder']").change(function(){
+					fn_setPage(1);
+				});
+			});
+		</script>
+		
+		<style>
+			#commMask {
+			  position:fixed;
+			  left:0;
+			  top:0;
+			  z-index:9000;
+			  background-color:#000;
+			  display:none;
+			}
+			
+			.window_modal {
+			  position:fixed;
+			  width:440px;
+			  height:200px;
+			  /* display:none; */
+			  z-index:9999;
+			  padding:20px;
+			}
+			
+			#cmmmLoading {
+			  width:375px; 
+			  height:203px;
+			  padding:10px;
+			  background-color:#ffffff;
+			}
+		</style>
+		
+	</head>
+	<body>
+		
+		
+		<div id="wrap">
+			
+
+
+
+<script type="text/javascript">
+	$(document).ready(function(){
+		$('#searchDetailBtn').click(function() {
+			$.ajax({
+				url:"/search/layer/searchDtl",
+				type:"get",
+				data: {
+					"searchKeyword" : $("#searchKeyword").val(),
+					"formId" : "searchForm"
+				},
+				success:function(res) {
+					layerPop(res);
+				}
+			});
+		});
+		
+		// 검색엔진 - 일반검색 시 사용불가능한 특수문자 예외처리
+		$(".notInputSearchKeyword").keydown(function(event) {
+			var eKey = event.key;
+			if(eKey == "&") {
+				event.preventDefault();
+				alert("& (은)는 입력할 수 없습니다.");
+			} else if(eKey == "|") {
+				event.preventDefault();
+				alert("| (은)는 입력할 수 없습니다.");
+			}
+		});
+		
+		$("#searchKeyword").keydown(function() {
+			if(event.keyCode === 13) {
+				event.preventDefault();
+				fn_search('searchForm', '');
+			}
+		});
+	});
+</script>
+
+	<div id="tm">
+		<div class="area">
+			<h1><img src="/resources/images/site/logo.gif" alt="한국국학진흥원" onclick="location.href='/main';" style="cursor:pointer;" /></h1>
+			<ul class="tmenu">
+				<li><a href="/page/information">기탁안내</a></li>
+				<li><a id="toggle" href="#none">사이트맵</a></li>
+			</ul>
+		</div>
+	</div>
+	
+	<div id="header">
+		<div class="area">
+			<h1><a href="/"><span class="yellow">소장자료</span><span class="white">검색</span></a></h1>
+			<div class="searchBox">
+				<form id="searchForm" name="searchForm" action="/search/list">
+					<input type="hidden" name="searchGbn" />
+					
+					<fieldset>
+						<legend>통합검색</legend>  
+						<ul class="search_form_box">
+							<li class="search_input">
+								<input type="text" id="searchKeyword" name="searchKeyword" title="검색어입력" placeholder="찾으시는 소장자료를 입력하세요." class="inputType01 notInputSearchKeyword" style="outline:none;" />
+							</li>
+							<li class="search_btn">
+								<button type="button" title="검색" onclick="fn_search('searchForm', '');"><img src="/resources/images/site/search_btn.png" alt="검색버튼"></button>
+							</li>
+							<li class="detail_btn">
+								<button title="상세검색" type="button" id="searchDetailBtn">상세검색</button>
+							</li>
+							<li class="special_btn">
+								<button title="특수문자" type="button" onclick="openWebime('searchKeyword');" style="margin-top:-1px;">특수문자</button>
+							</li>
+						</ul>
+					</fieldset>
+				</form>
+				<p class="help w80" style="color:white; margin-left:5px; margin-top:5px;" onclick="fn_showSearchGuide();">검색 도움말</p>
+			</div>
+		</div>
+	
+		<div id="navi">
+			<div class="area">
+				<ul>
+					<li><a  href="/possesion/data/list">자료유형</a></li>
+					<li><a  href="/page/intro">기탁문중</a></li>
+					<li><a  href="/possesion/cultural/list">지정문화재</a></li>
+					<li><a  href="/page/information">기탁안내</a></li>
+				</ul>
+				<div id="location">  
+					<ul>
+						<li class="home">홈</li>
+						
+							
+							
+							
+							
+							
+							
+								<li>검색결과</li>
+							
+						
+					</ul>
+				</div>
+			</div>
+		</div>
+	</div>
+			<div id="container_sub">
+				<div class="area">
+					
+
+
+
+
+
+	<!-- 사이드바 -->
+	<div class="left_dep_wp">
+		<h3 class="left_tl">
+			
+				
+				
+				
+				
+				
+					검색결과
+				
+			
+		</h3>
+		
+		<div class="left_menu">  
+			<ul id="lnb_drop">   
+				  
+					
+					
+					
+					
+					
+				
+				
+				<!-- <li> 
+					<a class="on" href="#">고서 (39,846)</a>
+					<ul class="dep2" style="display: block;">
+						<li> 
+							<a class="on" href="#">영해파 화</a>
+							<ul class="dep3" style="display: block;">
+								<li>
+									<a href="#">박동수</a>
+								</li>
+								<li>
+									<a href="#">박현출</a>
+								</li>
+								<li>
+									<a class="on" href="#">병재공파</a>
+								</li>
+							</ul>
+						</li> 
+						<li>
+							<a href="#">밀양박씨 송은공</a>
+						</li>
+						<li>
+							<a href="#">이씨반계종</a>
+						</li>
+						<li>
+							<a href="#">이씨반계종</a>
+						</li>
+						<li>
+							<a href="#">이씨반계종</a>
+						</li>
+						<li>
+							<a href="#">이씨반계종</a>
+						</li>
+					</ul>
+				</li>
+				<li> 
+					<a id="#" href="#">고문서 (139,990)</a>
+				</li>  
+				<li> 
+					<a id="#" href="#">목판 (1,525)</a>
+				</li>  
+				<li> 
+					<a id="#" href="#">서화 (2,146)</a>
+				</li>  
+				<li> 
+					<a id="#" href="#">기타유물 (721)</a>
+				</li>   -->
+			</ul>
+		</div>
+	</div>
+	 <!-- //사이드바 -->
+
+					
+
+
+
+
+
+<script type="text/javascript">
+	$(document).ready(function() {
+		init();
+	});
+	
+	function init() {
+		var data_bnd_id = "000000038732";
+		data_bnd_id = fn_removeLeftZero(data_bnd_id);
+		$("#data_bnd_id").text(data_bnd_id);
+	}
+	
+	function fn_siteLayerImgView(bnd_id) {
+		var openUrl = "http://kdms.koreastudy.or.kr:9095/common/img/view?schc_data_bnd_id="+bnd_id;
+		openPopup(openUrl, "소장자료 이미지", 800, 650, "", "schcImg");
+	}
+	
+	function tab_change(num){
+		$('.tab').children('.on').removeClass();
+		//$('.tab').children(':eq('+num+')').addClass('on');
+		$('#tab0'+num).addClass('on');
+		$('.table2').attr('hidden' , '');
+		$('#tab_0'+num).removeAttr('hidden');
+		
+		//alert($('.tab').children(':eq('+num+')').text());
+	}
+</script>
+
+<!--내용영역-->
+<div id="cont_wrap">
+	<h4 class="tit_ty1">상세보기</h4>
+	
+	<div class="tab_box floatl mt20">
+		<ul class="tab num6">
+			<li class="on" onclick="tab_change(0)" id="tab00" >
+				
+				<a>서지</a>
+			</li>
+ 			
+ 			
+		</ul>
+	</div>
+	
+	<table class="table2 mt20" id="tab_00">
+			<caption>게시판 글등록</caption>
+			<colgroup>
+				<col width="15%">
+				<col width="*">
+			</colgroup>
+			<tbody>
+				<tr>
+					<th scope="row">자료명</th>
+					<td>懸吐句解原本中庸全</td>
+				</tr>
+				<tr>
+					<th scope="row">자료ID</th>
+					<td id="data_bnd_id"></td>
+				</tr>
+				
+				<tr>
+					<th scope="row">자료유형</th>
+					<td>고서</td>
+				</tr>
+				
+					
+					
+					
+					
+					
+						
+							<tr>
+								<th scope="row">생산정보</th>
+								<td>
+									
+									
+										생산지 - 서울 <br/>
+									
+									
+										생산자 - 申泰三 <br/>
+									
+									
+										생산일 - 1951 <br/>
+									
+									
+									
+								</td>
+							</tr>
+						
+						
+							<tr>
+								<th scope="row">형태정보</th>
+								<td>
+									
+										판종 - 新鉛活字本 <br/>
+									
+									
+										수량 - 不分卷1冊 <br/>
+									
+									
+										크기 - 20.7×13.5㎝ <br/>
+									
+									
+										장정 - 包背裝本 <br/>
+									
+									
+										문자 - 國漢文 <br/>
+									
+									
+										서체 - 楷書 <br/>
+									
+									
+									
+									
+									
+										자행 - 行字數不同 <br/>
+									
+									
+									
+									
+									
+								</td>
+							</tr>
+						
+					
+				
+				
+					<tr>
+						<th scope="row">일반주기</th>
+						<td>
+							印刷所:晟人社印刷部, 發行所:世昌書舘
+						</td>
+					</tr>
+				
+				
+				
+				
+			</tbody>
+		</table>
+		
+		<table id="tab_01" hidden="" class="table2 mt20">
+			<caption>게시판 글등록</caption>
+			<colgroup>
+				<col width="15%">
+				<col width="*">
+			</colgroup>
+			<tbody>
+			<tr>
+				<th scope="row">목차</th>
+				<td></td>
+			</tr>
+			</tbody>
+		</table>
+			
+		<table id="tab_02" hidden="" class="table2 mt20">
+			<caption>게시판 글등록</caption>
+			<colgroup>
+				<col width="15%">
+				<col width="*">
+			</colgroup>
+			<tbody>
+			<tr>
+				<th scope="row">해제</th>
+				<td></td>
+			</tr>
+			</tbody>
+		</table>
+		
+		<div class="cbtn_wrap">
+			<input class="mbtn cbtn_type5" type="button" value="목록" onclick="location.href='/search/list?searchKeyword=%E8%A7%A3&searchCondition=FORM_TYPE-0-1&pageIndex=1';" />
+		</div>
+</div>
+<!--//내용영역-->
+
+				</div>
+			</div>
+			
+
+<script type="text/javascript">
+	function fn_openFamily(val) {
+		window.open(val, '_blank');
+	}
+</script>
+
+<div id="sub_footer">
+	<div class="area">
+		<h1><img src="/resources/images/site/foot_logo.png" alt="한국국학진흥원" /></h1>
+		<p>
+			36605 경상북도 안동시 도산면 퇴계로 1997   대표전화 : 054) 851-0700 <br />
+			COPYRIGHT 2018 THE KOREAN STUDIES INSTITUTE. ALL RIGHTS RESERVED.
+		</p>
+		<div class="ft_link">
+			<form name="form" id="form">
+				<div class="link1">
+					<select name="jumpMenu" id="jumpMenu" onchange="fn_openFamily(this.value);">
+						<option>패밀리사이트 바로가기</option>
+						<option value="http://ugyo.net">유교넷</option>
+						<option value="http://portal.ugyo.net">전통과 기록</option>
+						<option value="http://www.koreastudy.or.kr">한국국학진흥원</option>
+						<option value="http://yn.ugyo.net/index.do">한국학자료센터 영남권역센터</option>
+						<option value="http://www.koreastudy.or.kr/ikedu">한문교육원</option>
+						<option value="http://storymama.kr">이야기할머니</option>
+						<option value="http://www.koreastudy.or.kr/kacademy">인문정신연수원</option>
+					</select>
+				</div>
+			</form>
+		</div>
+	</div>
+</div>
+
+		</div>
+		
+		<div class="overlay" id="overlay">
+			<nav class="overlay-menu">
+				<ul>
+					<li ><a href="#">자료유형</a>
+						<ul>
+							<li><a href="/possesion/data/list?schc_data_type_cd=FORM_TYPE-0-1">고서</a></li>
+							<li><a href="/possesion/data/list?schc_data_type_cd=FORM_TYPE-0-2">고문서</a></li>
+							<li><a href="/possesion/data/list?schc_data_type_cd=FORM_TYPE-0-3">목판</a></li>
+							<li><a href="/possesion/data/list?schc_data_type_cd=FORM_TYPE-0-4">서화</a></li>
+							<li><a href="/possesion/data/list?schc_data_type_cd=FORM_TYPE-0-5">기타유물</a></li>
+							
+						</ul>
+					</li>
+					<li><a href="/page/intro">기탁문중</a>
+						<ul>
+							<li><a href="/page/intro">기탁문중안내</a></li>
+							<li><a href="/possesion/initial/list">기탁문중</a></li>
+						</ul>
+					</li>
+					<li><a href="#">지정문화재</a>
+						<ul>
+							<li><a href="/possesion/cultural/list?cltrast_dvs_cd=CULTURAL_ASSETS-0-1">국보</a></li>
+							<li><a href="/possesion/cultural/list?cltrast_dvs_cd=CULTURAL_ASSETS-0-2">보물</a></li>
+							<li><a href="/possesion/cultural/list?cltrast_dvs_cd=CULTURAL_ASSETS-0-3">시도유형문화재</a></li>
+							<li><a href="/possesion/cultural/list?cltrast_dvs_cd=CULTURAL_ASSETS-0-4">문화재자료</a></li>
+							<li><a href="/possesion/cultural/list?cltrast_dvs_cd=CULTURAL_ASSETS-0-5">유네스코</a></li>
+						</ul>
+					</li>
+					<li><a href="#">기탁안내</a>
+						<ul>
+							<li><a href="/page/information">기탁안내</a></li>
+						</ul>
+					</li>
+				</ul>
+			</nav>
+		</div>
+		
+		<div id="mask"></div>
+		<div id="campus_pop" style="display:none;"></div>
+		
+		<div id="commMask" style="display: none;"></div>
+		<div id="cmmmLoading" class="window_modal" style="position:fixed;left:50%;top:50%;width:200px;height:95px;border:1px solid #aaa;display: none;">
+			<div id="loading_text" style="width:200px;height:30px;text-align:center;">작업이 진행중입니다.</div>
+			<div style="width:200px;height:40px;text-align:center;padding-top:5px;"><img src="/resources/images/comm/ajax-loader.gif" border="0"/></div>
+			<div id="loading_text2" style="width:200px;height:30px;text-align:center;">잠시만 기다려 주세요.</div>
+		</div>
+	</body>
+</html>

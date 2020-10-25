@@ -1,0 +1,3610 @@
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!doctype html>
+<html lang="ko">
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=Edge"/>
+	<title>이미지뷰어 - 디지털 장서각</title>
+	<meta name="description" content="">
+	<meta name="author" content="">
+	
+	<link rel="shortcut icon" href="/resources/images/apple-touch-icon.png">
+	<link rel="apple-touch-icon" href="/resources/images/apple-touch-icon.png"> 
+	
+	
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<link rel="stylesheet" href="/resources/css/base.css?20190015" />
+<link rel="stylesheet" href="/resources/css/common.css?20190016" />
+<link rel="stylesheet" href="/resources/css/xsl_style.css" />
+<link rel="stylesheet" href="/resources/libs/css/font-awesome.css" />
+
+<script src="/resources/libs/jquery-1.11.3.min.js"></script>
+<script src="/resources/libs/backbone/underscore-min.js"></script>
+<script src="/resources/libs/backbone/backbone.js"></script>
+<script src="/resources/libs/core/underscore.string.min.js"></script>
+
+<script src="/resources/libs/core/string.js"></script>
+
+<script src="/resources/js/common.js?20200502"></script>
+<script src="/resources/js/search.js?20190015"></script>
+
+<script src="/resources/js/analysis.js?20190015"></script>
+
+
+
+<script>
+
+
+ga('create', 'UA-79990963-1', 'auto');
+ga_send_pageview();
+	    
+	    	
+
+</script>
+
+
+<script src="/resources/libs/jquery.blockUI.js"></script>
+<script>
+	new Image().src="/resources/images/common/busy.gif";
+	$(document).ajaxStop($.unblockUI); 
+	$.blockUI.defaults.css = {}; 
+	$.blockUI.defaults.overlayCSS ={};
+</script>
+
+
+<script>
+var g_servletPath = s.rtrim("/",'/');
+
+$(document).ready(function(){
+	/*
+	$(document).on('click','.cmm--layer-open', function() { 
+		$(this).next('.cmm--layer').fadeIn();
+	});
+	$(document).on('click','.cmm--layer-close', function() { 
+		$('.cmm--layer').fadeOut('fast');
+	});
+	*/
+	
+	$(document).on('click','.btn-toggle',function() {
+		if($(this).next('.info-wrap_content').is(":visible")) {
+			$(this).html('<img src="/resources/images/btn-option9.png" alt="열기" />');
+			$(this).next('.info-wrap_content').slideUp('');
+		} else {
+			$(this).html('<img src="/resources/images/btn-option10.png" alt="닫기" />');
+			$(this).next('.info-wrap_content').slideDown('');
+		} 
+	});
+	
+   	$(document).on("click", ".link_people", function(e) {
+   		if(!$(this).data("peopleUci"))
+   			return;
+   			
+       	$.get("/dir/ajaxPeopleIdByUCI", { "uci": $(this).data("peopleUci")}, null, "json")
+       	.done(function (result, textStatus, jqXHR) {
+       		if(!result['PPL_ID']) {
+       			alert('역대인물매핑 정보가 존재하지 않습니다.');
+       		} else {
+       			popWin("http://people.aks.ac.kr/front/dirSer/ppl/pplView.aks?pplId="+result['PPL_ID'],"_blank"); //http://people.aks.ac.kr/front/tabCon/ppl/pplView.aks
+       		}
+       	}).fail(function (jqXHR, textStatus, errorThrown) { alert(jqXHR.status + " : " + textStatus + " : " + errorThrown); });
+   	});
+
+   	$(document).on("click", ".changeSiteMode", function(e) { //링크번튼 보기방식 변경
+       	$.get("/changeSiteMode", { "siteMode": "switch"}, null, "json")
+       	.done(function (result, textStatus, jqXHR) {
+       		location.reload();
+       	}).fail(function (jqXHR, textStatus, errorThrown) { alert(jqXHR.status + " : " + textStatus + " : " + errorThrown); });
+   	});
+   	
+});
+
+
+$(document).ready(function(){
+	
+	$("#content").on("click", ".btn__list--small.pdf[data-pdf-cn], .link__list.pdf[data-pdf-cn]", function(e) {//PDF버튼클릭
+	    $("#layer_cmm1_wrap").hide();
+
+	    var pdfNum = $(this).data('pdfNum');
+	    var callNum = $(this).data('pdfCn');
+	    var html = "";
+	    for(var i=0; i<pdfNum; i++) {
+	    	var numStr = (i+1)+'';
+	    	if(i<9) numStr = "00"+numStr;
+	    	else if(i<99) numStr = "0"+numStr;
+	    	html+='<a href="/dir/downloadPdf?callNum='+callNum+'&volNum='+numStr+'" class="btn__list--small pdf" target="_blank">'+numStr+'책</a> ';
+	    	//http://jsg.aks.ac.kr/data/dir/downloadPdf.do
+	    }
+	    
+	    html ='<header class="pophead_mark pdf">'
+				+'<h2 class="poptit"> PDF 목록</h2>'
+				+'<div class="mark_num closebtn">X</div>'
+				+'</header>'
+				+'<div class="popcontent_mark">'
+				+ html
+				+'</div>';
+		
+	    $("#layer_cmm1_wrap").html(html);
+
+		
+		var pageX = e.pageX - 200;
+		var pageY = e.pageY + 10;
+	    
+		if((pageY+150)>($("#content").offset().top+$("#content").height()-10))
+			pageY = ($("#content").offset().top+$("#content").height())-150-10;
+
+	    $("#layer_cmm1_wrap").css("top", pageY);
+		$("#layer_cmm1_wrap").css("left", pageX);
+		
+	    //$("#layer_cmm1_wrap").css("top", $(this).offset().top + 20);
+		//$("#layer_cmm1_wrap").css("left", $(this).offset().left);
+		//console.log("e.page:"+e.pageX+","+e.pageY+" |||| "+"page:"+pageX+","+pageY+" |||| "+"offset:"+$(this).offset().left+","+$(this).offset().top);
+		
+		$("#layer_cmm1_wrap").show();
+		//$("#layer_cmm1_wrap").fadeIn();
+	});
+
+	$(document).on("click", "#layer_cmm1_wrap .closebtn", function(e) {//PDF보기 닫기
+		$("#layer_cmm1_wrap").hide();
+	});
+
+	/*
+	$("#content").on("click", ".btn__list--small.layerbtn", function(e) {
+		$(".btngrp .btn_wrap").hide();
+		$(this).next(".btn_wrap").show();
+		$(this).next(".btn_wrap").css("display","block");
+		//$("#layer_cmm1_wrap").fadeIn();
+	});
+
+	$("#content").on("click", ".btn_wrap .closebtn", function(e) {
+		$(this).closest(".btn_wrap").hide();
+	});
+	*/
+	
+	$("#content").on("click", ".btn__list--small[data-img-gubun='SJ_ARC_AA'], .btn__list--small[data-img-gubun='IMG_JSG']", function(e) {//아카이브 버튼클릭
+		var imgGubun = $(this).data('imgGubun');
+		var imgId = $(this).data('imgId');
+		var imgVol = $(this).data('imgVol');
+		
+		if(!(imgVol == "000" || imgVol == ""))
+			return;
+		
+		//if(!s.endsWith(imgId,"_000"))
+		//	return;
+		
+		e.stopPropagation();
+		e.preventDefault();
+
+		$("#layer_cmm1_wrap").hide();
+		$("#layer_cmm1_wrap").empty();
+		
+		$.get('/dir/ajaxImgVolLayer', {'imgId': imgId, 'imgGubun': imgGubun},
+			function (data, textStatus, jqXHR) {
+				$('#layer_cmm1_wrap').html(data);
+			}).error(function (jqXHR, textStatus, errorThrown) { alert(jqXHR.status + ' : ' + textStatus + ' : ' + errorThrown); });
+		
+		
+		var pageX = e.pageX - 200;
+		var pageY = e.pageY + 10;
+	    
+		if((pageY+150)>($("#content").offset().top+$("#content").height()-10)) {
+			pageY = ($("#content").offset().top+$("#content").height())-150-10;
+		}
+
+	    $("#layer_cmm1_wrap").css("top", pageY);
+		$("#layer_cmm1_wrap").css("left", pageX);
+
+		//$("#layer_cmm1_wrap").show();
+		$('#layer_cmm1_wrap').fadeIn();		
+	});
+	
+	// pdf 보기
+	$(document).on('click','.cmm2_wrap-open', function(e) {
+		var dataId = $(this).attr('data-data-id');
+		
+		$("#layer_cmm2_wrap").hide();
+		$("#layer_cmm2_wrap").empty();
+	      
+		//$("#layer_cmm2_wrap").load("/sub/helpAjax?helpId="+encodeURI(helpID));
+		$.get('/dir/ajaxCmm2Layer', { 'dataId': dataId},
+			function (data, textStatus, jqXHR) {
+				$('#layer_cmm2_wrap').html(data);
+			}).error(function (jqXHR, textStatus, errorThrown) { alert(jqXHR.status + ' : ' + textStatus + ' : ' + errorThrown); });
+		   
+		var pageX = e.pageX + 10;
+		var pageY = e.pageY + 10;
+		/*
+		console_log("pageX="+pageX+",layer_cmm2_wrap="+$("#layer_cmm2_wrap").width()+",content.offset.x="+$("#content").offset().left+",content.width="+$("#content").width());
+		console_log("pageY="+pageY+",layer_cmm2_wrap="+$("#layer_cmm2_wrap").height()+",content.offset.y="+$("#content").offset().top+",content.height="+$("#content").height());
+		if((pageX+$("#layer_cmm2_wrap").width())>($("#content").offset().left+$("#content").width()-20))
+			pageX = ($("#content").offset().left+$("#content").width()) - $("#layer_cmm2_wrap").width()-20;
+		if((pageY+$("#layer_cmm2_wrap").height())>($("#content").offset().top+$("#content").height()-10))
+			pageY = ($("#content").offset().top+$("#content").height()) - $("#layer_cmm2_wrap").height()-10;
+		*/
+		if((pageY+250)>($("#content").offset().top+$("#content").height()-10)) {
+			pageY = ($("#content").offset().top+$("#content").height())-250-10;
+		}
+
+		$("#layer_cmm2_wrap").css("left", pageX);
+		$("#layer_cmm2_wrap").css("top", pageY);
+		
+		//$("#layer_cmm2_wrap").show();
+		$('#layer_cmm2_wrap').fadeIn();
+	});
+	
+	$(document).on('click','#layer_cmm2_wrap .closebtn', function() {
+		//$("#layer_cmm2_wrap").hide();
+		$('#layer_cmm2_wrap').fadeOut('fast');
+	});
+	
+
+	/*
+	$(".totop").hide(); // 탑 버튼 숨김
+
+	$(window).scroll(function () {
+		//console.log($(this).scrollTop());
+		if ($(this).scrollTop() > 100) { // 스크롤 내릴 표시
+			$('.totop').fadeIn();
+		} else {
+			$('.totop').fadeOut();
+		}
+	});
+
+	$(document).on('scroll','.content--scroll1', function() {
+		//console.log($(this).scrollTop());
+		if ($(this).scrollTop() > 100) { // 스크롤 내릴 표시
+			$('.totop').fadeIn();
+		} else {
+			$('.totop').fadeOut();
+		}
+	});
+	
+	$("body").on("click", ".totop", function(e) {//탑 버튼 클릭이동
+		if($(".content--scroll1").length>0)
+			$(".content--scroll1").scrollTop(0);
+		else
+			$('body,html').animate({scrollTop: 0}, 500);  // 탑 이동 스크롤 속도 $(window).scrollTop(0);
+		return false;
+	});
+	*/
+});
+
+</script>
+</head>
+
+<body style="overflow:hidden;">
+
+<div id="wrap" class="viewer-wrap">
+	
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ 
+
+<link href="/resources/libs/jquery.simple.tree/css/simpleTree.css" rel="stylesheet" type="text/css">
+<style>
+	.V1.V2.V3.simpleTree {box-sizing:border-box; margin:0 0 0 10px; padding:3px 5px; height:100%; overflow:auto; /*border-bottom:solid 1px #d0d0d2;*/}
+	.V1.V2.V3.simpleTree .root {margin-left:-16px;}
+	.V1.V2.V3.simpleTree li {/*background: #f2f2f2;*/ border-bottom:none; font-size:14px; font-weight:normal;}
+	
+	#viewLoading {position:absolute; top:50%; left:50%; display:none; z-index:10000;}
+</style>
+
+<script src="/resources/libs/jquery.simple.tree/js/jquery.simple.tree.js" type="text/javascript"></script>
+
+
+<link href="/resources/libs/jquery-ui/jquery-ui.min.css" rel="stylesheet"  />
+<script src="/resources/libs/jquery-ui/jquery-ui.min.js" type="text/javascript"></script>
+
+<link href="/resources/libs/mCustomScrollbar/jquery.mCustomScrollbar.css" rel="stylesheet" type="text/css" />
+<script src="/resources/libs/mCustomScrollbar/jquery.mCustomScrollbar.js" type="text/javascript"></script>
+
+
+
+<script type="text/javascript" src="/resources/libs/openseadragon-bin-2.4.0/openseadragon.js"></script>
+
+
+
+
+<script type="text/javascript">
+	var AppRouter = Backbone.Router.extend({
+	    routes: {
+	        'node?*queryString': "node",
+	    },
+	
+	    node: function(queryString) {
+	    	var url = "/viewer/node";
+    		if (typeof queryString != 'undefined')
+	    		url += "?"+queryString;
+	        this.loadAjaxData(url);
+	    },
+	    
+	    loadAjaxData: function(pageUrl) {
+	    	//console_log("[loadAjaxData] encodeURI before: "+ pageUrl);
+	    	pageUrl = encodeURI(pageUrl);
+	    	//console_log("[loadAjaxData] encodeURI after: "+ pageUrl);
+	    	
+	    	if (IV.iviewObj == undefined)
+	    		_.delay(goImageUrl, 1000, pageUrl);
+	    	else
+	    		goImageUrl(pageUrl);
+	    	
+	    	/*
+	    	$.blockUI({message: '<div class="loading-pane"><img src="/resources/images/common/busy.gif" /></div>'});
+	    	$.get(pageUrl)
+	    	.done(function (data, textStatus, jqXHR) {
+	    		updateTreeNavi(pageUrl);
+	    		//$.unblockUI();
+	    		$("#content").html(data);
+		        <!--$("#content").append('<div class="debug" style="margin:10px 0"><a href="'+pageUrl+'" target="_blank">'+pageUrl+'</a></div>');-->
+	    		hashPageLoaded();
+
+	    		if(typeof ga_send_pageview_ajax != 'undefined') {ga_send_pageview_ajax();} //google analysis
+
+	    	}).fail(function (jqXHR, textStatus, errorThrown) { alert(jqXHR.status + " : " + textStatus + " : " + errorThrown); }).always($.unblockUI);
+	    	*/
+	    }
+	});
+
+    var appRouter = new AppRouter;
+         
+	$(function(){
+		Backbone.history.start();
+	});
+</script>
+
+
+<script type="text/javascript">
+var gTreeState = {
+	paramObj:{
+		depth: '',
+		upPath: '',
+		dataId: ''
+	},
+	
+	g_getPathId : function(paramObj) {
+		if(!paramObj.upPath) paramObj.upPath = '';
+		if(!paramObj.dataId) paramObj.dataId = '';
+		
+		if(paramObj.upPath)
+			return paramObj.upPath+"^"+paramObj.dataId;
+		else
+			return paramObj.dataId;
+	}
+};
+	
+function defaultParamObj(paramObj) {
+	if(s.isBlank(paramObj.depth)) paramObj.depth = defaultStr(gTreeState.paramObj.depth, "");
+	if(s.isBlank(paramObj.upPath)) paramObj.depth = defaultStr(gTreeState.paramObj.upPath, "");
+	if(s.isBlank(paramObj.dataId)) paramObj.dataId = defaultStr(gTreeState.paramObj.dataId, "");
+	
+	return paramObj;
+}
+
+var simpleTreeCollection;
+$(document).ready(function(){
+	simpleTreeCollection = $('.simpleTree').simpleTree({
+		autoclose: false,
+		animate: false,
+		afterClickToggle : true,
+		imageUrl : "/resources/libs/jquery.simple.tree",
+		
+		afterClick:function(node){
+			//alert("text-"+$('span:first',node).text());
+			click_Node(node);
+		},
+		afterDblClick:function(node){
+			//alert("text-"+$('span:first',node).text());
+		},
+		afterAjax: function (node) {
+			//alert('Loaded');
+		},
+		initComplete: function (treeObj) {
+			//treeObj = rObj;
+		}
+	});
+});
+
+function updateTreeNavi(pageUrl) {
+	var paramObj = getUrlParam(pageUrl);
+	paramObj = defaultParamObj(paramObj);
+	
+	treeSync(paramObj);
+}
+
+function hashPageLoaded() {
+	//var hasUrl = Backbone.history.getFragment();
+	//var paramObj = getUrlParam(hasUrl);
+}
+
+function treeSync(paramObj) {
+	var treeObj = $(".simpleTree .root").data("treeObj");
+	
+	//console.log(treeObj);
+	//alert(JSON.stringify($TREE.option));
+	//alert($("li[data-dataId='"+paramObj.dataId+"']", TREE).html());
+
+    treeObj.sync_treeNode({
+        matchedComplete: function (node) {
+            //console.log('matchedComplete:' + node);
+        },
+        matchedNode: function (node) {
+    		var dataId = $(node).attr("data-dataId");
+    		var dataUrl = $(node).attr("data-url");
+        	//console.log(dataUrl);
+        	
+        	var nodeParamObj = getUrlParam(dataUrl);
+			var nodePathId = gTreeState.g_getPathId(nodeParamObj);
+			var gPathId = gTreeState.g_getPathId(paramObj);
+			
+			//console.log("[treeSync] " +gPathId+" : "+nodePathId + " : "+s.startsWith(gPathId, nodePathId));
+			if(gPathId == nodePathId)
+				return true;
+			else
+				return s.startsWith(gPathId, nodePathId);
+        },
+        complete: function (node) {
+            //console.log('sync_complete');
+            //$(window).scrollTop(100);
+            scrollToVisibleNode(node, ".simpleTree", 0, 10);
+        }
+    });
+}
+	
+function click_Node(node) {
+	var dataUrl = node.attr("data-url");
+	var paramObj = getUrlParam(dataUrl);
+	if(paramObj.depth!='2') //이미지노드인 경우만 처리
+		return;
+	
+	// paramObj.depth, paramObj.upPath, paramObj.dataId
+	//goImageUrl(dataUrl);
+	appRouter.navigate('/node'+dataUrl, { trigger: true })
+}
+</script>
+
+<script type="text/javascript">
+function resizeWindow() {
+	var thumbHeight = 0;
+	if($('.thumbwrap').hasClass("open")) {
+		thumbHeight = 110;
+	}
+	
+	var winH = $(window).height() - thumbHeight;
+	$(".viewer__wrap__tree").css({height:winH-52+"px"});
+	$(".viewer__wrap__tree .simpleTree.V1.V2.V3").css({height:winH-52-35+"px"});
+	
+	$(".viewer__wrap__content").css({height:winH-52+"px"});
+	$(".viewer__wrap__content #viewer").css({height:winH-52-40+"px"});
+	
+	$(".viewer__wrap__text").css({height:winH-52+"px"});
+	$(".viewer__wrap__text .viewer__wrap__text_cont").css({height:winH-52-35+"px"});
+} 
+
+$(document).ready(function(){
+	resizeWindow();	
+	$(window).resize(resizeWindow); 
+
+	// 뷰어 트리 토글
+	$(document).on('click','.viewimg-toggle_left', function() {
+		if($('.viewer__wrap').hasClass("viewer__wrap--tree--open")) {
+			$('.viewer__wrap').removeClass('viewer__wrap--tree--open');
+			$('.viewer__wrap').addClass('viewer__wrap--tree--close');
+		} else {
+			$('.viewer__wrap').removeClass('viewer__wrap--tree--close');
+			$('.viewer__wrap').addClass('viewer__wrap--tree--open');
+		}
+		
+	});
+	
+	// 뷰어 텍스트 토글
+	$(document).on('click','.viewimg-toggle_right', function() {
+		if($('.viewer__wrap').hasClass("viewer__wrap--text--open")) {
+			$('.viewer__wrap').removeClass('viewer__wrap--text--open');
+			$('.viewer__wrap').addClass('viewer__wrap--text--close');
+		} else {
+			$('.viewer__wrap').removeClass('viewer__wrap--text--close');
+			$('.viewer__wrap').addClass('viewer__wrap--text--open');
+		}
+		
+	});
+
+	// 뷰어 썸네일 토글
+	$(document).on('click','.viewimg-toggle_bottom1,.viewimg-toggle_bottom2', function() {
+		if($('.thumbwrap').hasClass("open")) {
+			$('.thumbwrap').removeClass('open');
+			$('.viewimg-toggle_bottom1').removeClass('open');
+			$('.viewimg-toggle_bottom2').removeClass('open');
+			resizeWindow();
+		} else {
+			$('.thumbwrap').addClass('open');
+			$('.viewimg-toggle_bottom1').addClass('open');
+			$('.viewimg-toggle_bottom2').addClass('open');
+			resizeWindow();
+		}
+		
+	});
+
+	
+	// 우측 텍스트 탭 클릭
+	$(document).on('click','.viewer__wrap__tree__header .tab.gisa', function() {
+		$(".viewer__wrap__tree__header .tab").removeClass("on");
+		$(this).addClass("on");
+		$(".viewer__wrap__text__heje").hide();
+		$(".viewer__wrap__text__gisa").show();
+	});
+
+	$(document).on('click','.viewer__wrap__tree__header .tab.heje', function() {
+		$(".viewer__wrap__tree__header .tab").removeClass("on");
+		$(this).addClass("on");
+		$(".viewer__wrap__text__heje").show();
+		$(".viewer__wrap__text__gisa").hide();
+	});
+
+	$(document).on('click','.viewer__wrap__text__gisa span[data-xsl-tag="page"]', function() {
+		//alert($(this).data("pageId"))
+		goPageId(dataJSon.toImgPgIdFromGsPgId($(this).data("pageId")));
+	});
+	
+	$('.viewer__wrap .viewer_navi_map_toggle').click(function (e) {
+		IV.naviMapToggle();
+	});
+	
+	$("#btn_sj_heje_pop").click(function() {
+		if(!$(this).hasClass('disable')) {
+			//popHeje('SJ',dataJSon.cn);
+			//goOrgDataView('SJ_JSG','JSG_'+dataJSon.cn);
+			goOrgDataView('PORTAL_POP','JSG_K1-151');
+		}
+	});
+});
+</script>
+
+<script type="text/javascript">
+var IV = {
+	iviewObj : undefined,
+	
+	init : function(){
+		$(document).ready(function () {
+			IV.book_resize_all();	
+			$(window).resize(IV.book_resize_all);
+			
+			IV.book_viewer_active();
+			IV.book_scroll_active();
+		});
+	},
+	
+	book_resize_all : function() {
+		/*
+	  	if (IV.iviewObj) {
+	        window.setTimeout(function(){
+	        	IV.iviewObj.iviewer('fit'); 
+	        }, 150);
+	    }
+		*/
+	},
+	
+
+
+	book_viewer_create : function (tileSources){
+		var	obj=$('.viewer__wrap');
+	
+		if(!s.endsWith(tileSources,".xml")) {
+			tileSources = {type:'image'
+					,url:tileSources
+					,buildPyramid: false
+					,crossOriginPolicy: 'Anonymous'
+				    ,ajaxWithCredentials: false};
+		}
+
+		/*
+		if (IV.iviewObj) {
+			IV.iviewObj.destroy();
+			IV.iviewObj = null;
+		}
+		*/
+		
+		if (IV.iviewObj) {
+			IV.iviewObj.open(tileSources); 
+		} else {
+			OpenSeadragon.DEFAULT_SETTINGS.zoomPerClick = 3.0; // defalut: 2.0
+			OpenSeadragon.DEFAULT_SETTINGS.zoomPerScroll = 2.0; //defalut: 1.2 
+			IV.iviewObj = OpenSeadragon({
+		        // debugMode: true,
+		        id: 'viewer',
+		        prefixUrl: "/resources/libs/openseadragon-bin-2.4.0/images/",
+		        tileSources: tileSources,
+		        showNavigator:true,
+		       /*navigatorAutoFade:  true,*/
+		        
+		        degrees: 0, // Initial rotation angle
+		        showRotationControl: true, // Show rotation buttons
+		        gestureSettingsTouch: { // Enable touch rotation on tactile devices
+		            pinchRotate: true
+		        },
+			    //zoomInButton:   "zoom_plus",
+			    //zoomOutButton:  "zoom_minus",
+			    //homeButton:     "zoom_home",	        
+			    //fullPageButton: "full-page",
+		    });
+			
+			
+			$(".openseadragon-canvas").next('div').css("left","20px");
+			IV.naviMapToggle();
+		}
+	},
+
+
+
+
+	//scroll
+	book_scroll_active : function (){
+		var obj=$('.thumbwrap');
+		
+		obj.find('.thumb_area').mCustomScrollbar({
+			scrollInertia:550,
+			horizontalScroll:true,
+			mouseWheelPixels:116,
+			scrollButtons:{
+				enable:false,
+				scrollType:'pixels',
+				scrollAmount:116
+			},
+			callbacks:{
+				/*onScroll:function(){ snapScrollbar(); }*/
+			}
+		});
+		
+		/* snap scrollbar fn */
+		var snapTo=[];
+		obj.find('.thumb_area .thumb_item').each(function(){
+			var $this=$(this),thisX=$this.position().left;
+			snapTo.push(thisX);
+		});
+		function snapScrollbar(){
+			var posX=obj.find('.thumb_area .mCSB_container').position().left,closestX=findClosest(Math.abs(posX),snapTo);
+			obj.find('.thumb_area').mCustomScrollbar('scrollTo',closestX,{scrollInertia:350,callbacks:false});
+		}
+		function findClosest(num,arr){
+	        var curr=arr[0];
+	        var diff=Math.abs(num-curr);
+	        for(var val=0; val<arr.length; val++){
+		        var newdiff=Math.abs(num-arr[val]);
+	    	    if(newdiff<diff){
+	        	    diff=newdiff;
+	            	curr=arr[val];
+	        	}
+	    	}
+	    	return curr;
+		}
+	},
+
+	book_viewer_active : function (){
+		//IV.book_viewer_create('/resource/book/imgOrigin/sample1.jpg');
+		
+		$('.thumbwrap .thumb_items li').click(function (e) {
+	    	e.preventDefault();
+	        goImageIdx($(this).data('pageIdx'));
+	    });
+	
+	
+		$('.thumbwrap .thumb_prev_button').click(function (e) {
+	    	e.preventDefault();
+	    	naviImage('prev');
+	    });
+	
+		$('.thumbwrap .thumb_next_button').click(function (e) {
+	    	e.preventDefault();
+	    	naviImage('next');
+		});
+
+		var	obj=$('.viewimg-control');
+		
+	    obj.find('.plus').click(function (e) {
+	    	e.preventDefault();
+	    	
+	    	
+	    	
+		    	//doSingleZoomInHandler, doSingleZoomIn();
+	            IV.iviewObj.viewport.zoomBy(OpenSeadragon.DEFAULT_SETTINGS.zoomPerClick/1.0); // 2.0/1.0
+	            IV.iviewObj.viewport.applyConstraints();
+	    	
+	    	
+	    	
+	    });
+	    obj.find('.minus').click(function (e) {
+	    	e.preventDefault();
+	    	
+	    	
+	            IV.iviewObj.viewport.zoomBy(1.0/OpenSeadragon.DEFAULT_SETTINGS.zoomPerClick); // 1.0/2.0
+	            IV.iviewObj.viewport.applyConstraints();
+	    	
+	    	
+	    		    	
+	    });
+	    obj.find('.resize').click(function (e) {
+	    	e.preventDefault();
+	    	
+	    	
+	            IV.iviewObj.viewport.goHome();
+	    	
+	    	
+	    	
+	    });
+	    obj.find('.one_n_one').click(function (e) {
+	    	e.preventDefault();
+	    	
+	    });	
+	
+	    $('.print').click(function (e) {
+	    	e.preventDefault();
+	    	printWebPage();
+	    });
+
+	    $('.viewimg-control .tree_first_move').click(function (e) {
+	    	e.preventDefault();
+	    	naviTree('first');
+	   	});		
+	    $('.viewimg-control .tree_prev_move').click(function (e) {
+	    	e.preventDefault();
+	    	naviTree('prev');
+	   	});		
+	    $('.viewimg-control .tree_next_move').click(function (e) {
+	    	e.preventDefault();
+	    	naviTree('next');
+	   	});		
+	    $('.viewimg-control .tree_last_move').click(function (e) {
+	    	e.preventDefault();
+	    	naviTree('last');
+	   	});
+
+	    
+	    $('.viewimg-control .prev_move, .btn__viewer__img__prev').click(function (e) {
+	    	e.preventDefault();
+	    	naviImage('prev');
+	    });
+	    $('.viewimg-control .first_move').click(function (e) {
+	    	e.preventDefault();
+	    	naviImage('first');
+	   	});		
+	    $('.viewimg-control .next_move, .btn__viewer__img__next').click(function (e) {
+	    	e.preventDefault();
+	    	naviImage('next');
+	   	});	
+	    $('.viewimg-control .last_move').click(function (e) {
+	    	e.preventDefault();
+	    	naviImage('last');
+	   	});
+	    
+	    $('.viewimg-control .gotopage').click(function (e) {
+	    	e.preventDefault();
+	    	goImageIdx($(".page_count input.imgNum").val()-1);
+	   	});
+		$('.viewimg-control .page_count input.imgNum').keyup(function (e) {
+	    	if (e.keyCode === 13) {
+	    		goImageIdx($('.page_count input.imgNum').val()-1);
+	    	}
+	  	});
+	    
+	    $("#viewer").hover(
+	   		function() {$(".btn__viewer__img__prev,.btn__viewer__img__next").show();},
+	   	  	function() {$(".btn__viewer__img__prev,.btn__viewer__img__next").hide();}
+		);	    
+
+	    $(".btn__viewer__img__prev,.btn__viewer__img__next").mouseenter(function() {$(".btn__viewer__img__prev,.btn__viewer__img__next").show();});	    
+	},
+	
+	naviMapShown: true,
+	naviMapToggle: function () {
+		if(!(this.iviewObj && this.iviewObj.navigator))
+			return;
+		
+	    if (this.naviMapShown)
+	    	this.iviewObj.navigator.element.style.display = "none";
+	    else
+	    	this.iviewObj.navigator.element.style.display = "inline-block";
+	    this.naviMapShown = !this.naviMapShown;
+	},
+	naviMapRestore: function () {
+		if(!(this.iviewObj && this.iviewObj.navigator))
+			return;
+
+		if (this.naviMapShown)
+			this.iviewObj.navigator.element.style.display = "inline-block";
+	    else
+	    	this.iviewObj.navigator.element.style.display = "none";
+	}	
+};
+
+function thumbSync(paramObj) {
+	$('.thumbwrap .thumb_items li').removeClass('on');
+	
+	$node_on = $('.thumbwrap .thumb_items li[data-page-id="'+paramObj.dataId+'"]');
+	$node_on.addClass('on');
+	
+	//console.log("on-left:"+$node_on.offset().left+" thumb_area-left:"+$('.thumbwrap .thumb_area').offset().left+" mCSB_container-left:"+$('.thumbwrap .thumb_area .mCSB_container').offset().left+" thumb_area-width:"+$('.thumbwrap .thumb_area').width());
+    if($node_on.offset().left<$('.thumbwrap .thumb_area').offset().left
+   		|| $node_on.offset().left+$node_on.width()>$('.thumbwrap .thumb_area').offset().left+$('.thumbwrap .thumb_area').width()) {
+    	$('.thumbwrap .thumb_area').mCustomScrollbar('scrollTo','.thumb_items li[data-page-id="'+paramObj.dataId+'"]');
+    }
+}
+
+function naviImage(dire) {
+	if(dataJSon.imgItems.length<=0)
+		return;
+			
+	if(dire=='first') {
+		dataJSon.imgIdx = 0;
+	} else if(dire=='prev') {
+		if(dataJSon.imgIdx <= 0)
+			dataJSon.imgIdx = dataJSon.imgItems.length-1;
+		else
+			dataJSon.imgIdx = dataJSon.imgIdx-1;
+	} else if(dire=='next') {
+		if(dataJSon.imgIdx >= (dataJSon.imgItems.length-1))
+			dataJSon.imgIdx = 0;
+		else
+			dataJSon.imgIdx = dataJSon.imgIdx+1;
+	} else if(dire=='last') {
+		dataJSon.imgIdx = dataJSon.imgItems.length-1;
+	}
+	
+	goImageIdx(dataJSon.imgIdx);
+}
+
+function naviTree(dire) {
+	if(dataJSon.imgItems.length<=0)
+		return;
+	
+	var lvNodes = $(".simpleTree.V1.V2.V3 .root li li");
+	var index = lvNodes.index($(".simpleTree.V1.V2.V3 .root li li:has(.active)"));
+	if(index<0) {
+		goImageIdx(0);
+		return;
+	}
+	//console.log(index);
+	
+	if(dire=='first') {
+		index = 0;
+	} else if(dire=='prev') {
+		if(index <= 0)
+			index = lvNodes.length-1;
+		else
+			index = index-1;
+	} else if(dire=='next') {
+		if(index >= (lvNodes.length-1))
+			index = 0;
+		else
+			index = index+1;
+	} else if(dire=='last') {
+		index = lvNodes.length-1;
+	}
+	
+	var findNode = lvNodes.eq(index);
+	//console.log(index);
+	//console.log(findNode.data("url"));
+	goImageUrl(findNode.data("url"));
+}
+
+function gaTrack(dataId) {
+	ga('set', { page: "/viewer/viewerIMok?dataId="+dataId, title: '상세보기::디지털 장서각 원문이미지' });
+	ga_send_pageview_ajax();
+}
+
+function goImageIdx(imgIdx, syncYN) {
+	//console.log("[goImageIdx] imgItems.length="+dataJSon.imgItems.length);
+	if(dataJSon.imgItems.length<=0 || imgIdx<0 || imgIdx>=dataJSon.imgItems.length) {
+		IV.book_viewer_create("/resources/images/viewer_img_default.png");
+		return;
+	}
+	
+	dataJSon.imgIdx = imgIdx;
+	//console.log("[goImageIdx] ID="+dataJSon.dataJSon.getCurId() + ", imgID="+dataJSon.dataJSon.getCurImgId());
+	//console.log(dataJSon.getImagePath());
+	IV.book_viewer_create(dataJSon.getImagePath());
+	IV.naviMapRestore();
+
+	$(".page_count input.imgNum").val(imgIdx+1);
+	$("#viewer_sub_title").html(dataJSon.getCurId());
+	
+	gaTrack(dataJSon.cn+'|'+dataJSon.vol+'|'+dataJSon.getCurId());
+	
+	//console.log("[goImageIdx] syncYN="+syncYN);
+	if(syncYN=='N')
+		return;
+	
+	var dataUrl = $(".simpleTree.V1.V2.V3 .root li li[data-dataid='"+dataJSon.getCurId()+"']").data("url");
+	//console.log("[goImageIdx] tree syncYN OK, dataId="+dataJSon.getCurId()+", dataUrl="+dataUrl);
+	if(!s.isBlank(dataUrl)) {
+		var paramObj = getUrlParam(dataUrl);
+		paramObj = defaultParamObj(paramObj);
+		//console.log(paramObj);
+		treeSync(paramObj);
+		thumbSync(paramObj);
+
+		loadGSText(paramObj.dataId);
+	}
+}
+
+function goPageId(pageId) {
+	var imgIdx = _.findIndex(dataJSon.imgItems, function(x) { return x["ID"]==pageId;});
+	//console.log("goImageUrl: imgIdx="+imgIdx);
+	goImageIdx(imgIdx);
+}
+
+function goImageUrl(dataUrl) {
+	//console.log('[goImageUrl] dataUrl:'+dataUrl);
+	var paramObj = getUrlParam(dataUrl);
+	if(paramObj.depth!='2')
+		return;
+
+	var imgIdx = _.findIndex(dataJSon.imgItems, function(x) { return x["ID"]==paramObj.dataId;});
+	//console.log("goImageUrl: imgIdx="+imgIdx);
+	goImageIdx(imgIdx);
+}
+
+function loadGSText(dataId) {
+	
+		return;
+	
+
+    $.get("/viewer/ajaxGisaIMok", {'dataId': 'K1-151|001|'+dataJSon.Id2TId(dataId), 'startGisaPgNum':'1'}) //'ARC_20032_001_0001'
+    .done(function(data, textStatus, jqXHR) {
+		$(".viewer__wrap__text__gisa").html(data);
+		activeGisaPgStart(dataJSon.toGsPgIdFromImgId());
+		//$("#viewer_sub_title").html($(".viewer__wrap__text #gisa_sub_title_hidden").html());
+    }).fail(function (jqXHR, textStatus, errorThrown) { alert(jqXHR.status + " : " + textStatus + " : " + errorThrown); });
+}
+
+function activeGisaPgStart(gisaPgId) {
+	$(".viewer__wrap__text__gisa span[data-xsl-tag='page']").removeClass("on");	
+	var $activeNode = $(".viewer__wrap__text__gisa span[data-page-id='"+gisaPgId+"']");
+	$activeNode.addClass("on");
+	
+	if($activeNode.length>0) {
+		scrollToVisibleNode($activeNode.get(0), ".viewer__wrap__text_cont", 0, 10);
+	} else {
+		$('.viewer__wrap__text_cont').scrollTop(0);
+	}
+	
+	$(".viewer__wrap__text__gisa span[data-xsl-tag='page']").each(function(index, item){
+		var $item = $(item);
+		$item.text(dataJSon.toImgIdFromGsPgId($item.data('pageId'))+'(원문:'+$item.data('pageId')+')');
+	});
+	
+	//console.log('activeGisaPgStart:'+gisaPgId);
+}
+
+function make5bar(val) { //방화벽에서 id를 주민번호로 인식하는 문제를 피해가기위해 '_' 추가
+	var ret =  '';
+	for(var i=0; i<val.length; i++) {
+		ret+=val[i];
+		if(i==4 || i==9)
+			ret+='_';
+	}
+	return ret;
+}
+
+function downloadImg(downType) {
+	
+	var bookDown = "false";
+	if(downType=='book')
+		bookDown = "true";
+
+	if(dataJSon.viewerType == 'Y') {
+		var ids = make5bar(dataJSon.getCurImgId());
+		if(bookDown == "true") {
+			ids = '';
+			for(var i=0; i<dataJSon.imgItems.length; i++) {
+				if(!dataJSon.imgItems[i]['imgID'])
+					continue;
+				if(i>0) {ids += "|";} //"　";
+				ids += make5bar(dataJSon.imgItems[i]['imgID']);
+			}
+		}
+    	/* window.open('http://jsgimage.aks.ac.kr/downloadImage?' + '&id=' + encodeURIComponent(ids), 'downloadPop'); */
+    	
+    	popWin('', "downImgAsk", 850, 1120);
+		$('#downloadJsgImageForm input[name="id"]').val(ids);
+		$('#downloadJsgImageForm').submit();
+	} else {
+    	window.open('/viewer/download?bookDown=' + bookDown + '&imgID=' + encodeURIComponent(dataJSon.getCurImgId()), 'downloadPop');
+    	
+	}
+
+    
+    
+    if(downType=='book') {
+    	ga('send', 'event', { eventCategory: 'download', eventAction: 'orgImageBook', eventLabel: dataJSon.getCurDownId(true), eventValue: 1});
+    } else {
+    	ga('send', 'event', { eventCategory: 'download', eventAction: 'orgImage', eventLabel: dataJSon.getCurDownId(false), eventValue: 1});
+    }
+}
+
+function copyUrlMe() {
+	copyUrl('dataId='+dataJSon.cn+'|'+dataJSon.vol+'|'+dataJSon.getCurId());
+}
+
+function pupupQnaMe() {
+	pupupQna('dataId='+dataJSon.cn+'|'+dataJSon.vol+'|'+dataJSon.getCurId());
+}
+
+function sidePaneOpenClose() {
+	var isOpened = false;
+	if($('.viewer__wrap').hasClass("viewer__wrap--tree--open"))
+		isOpened = true;
+	if($('.viewer__wrap').hasClass("viewer__wrap--text--open"))
+		isOpened = true;
+	if($('.thumbwrap').hasClass("open"))
+		isOpened = true;
+
+	if(isOpened) {
+		if($('.viewer__wrap').hasClass("viewer__wrap--tree--open"))
+			$('.viewimg-toggle_left').click();
+		if($('.viewer__wrap').hasClass("viewer__wrap--text--open"))
+			$('.viewimg-toggle_right').click();
+		if($('.thumbwrap').hasClass("open"))
+			$('.viewimg-toggle_bottom2').click();
+	} else {
+		if(!$('.viewer__wrap').hasClass("viewer__wrap--tree--open"))
+			$('.viewimg-toggle_left').click();
+		if(!$('.viewer__wrap').hasClass("viewer__wrap--text--open"))
+			$('.viewimg-toggle_right').click();
+		if(!$('.thumbwrap').hasClass("open"))
+			$('.viewimg-toggle_bottom2').click();
+	}
+}
+</script>
+
+<script type="text/javascript">
+var dataJSon = {
+	cn:'K1-151',
+	vol:'001',
+	viewerType:'Y',
+	startGisaPgNum:1,
+	imgIdx:0,
+	imgItems: [{"imgID":"20190404084707182","PID":"001","ID":"001","TID":"001"},{"imgID":"20190404084718430","PID":"002","ID":"002","TID":"002"},{"imgID":"20190404084736853","PID":"002","ID":"003","TID":"003"},{"imgID":"20190404084749224","PID":"002","ID":"004","TID":"004"},{"imgID":"20190404084801829","PID":"002","ID":"005","TID":"005"},{"imgID":"20190404084814933","PID":"002","ID":"006","TID":"006"},{"imgID":"20190404084828645","PID":"002","ID":"007","TID":"007"},{"imgID":"20190404084841859","PID":"002","ID":"008","TID":"008"},{"imgID":"20190404084855899","PID":"002","ID":"009","TID":"009"},{"imgID":"20190404084909783","PID":"002","ID":"010","TID":"010"},{"imgID":"20190404084922731","PID":"002","ID":"011","TID":"011"},{"imgID":"20190404084935273","PID":"002","ID":"012","TID":"012"},{"imgID":"20190404084949204","PID":"003","ID":"013","TID":"013"},{"imgID":"20190404085003634","PID":"003","ID":"014","TID":"014"},{"imgID":"20190404085017456","PID":"003","ID":"015","TID":"015"},{"imgID":"20190404085031028","PID":"003","ID":"016","TID":"016"},{"imgID":"20190404085043789","PID":"003","ID":"017","TID":"017"},{"imgID":"20190404085057782","PID":"003","ID":"018","TID":"018"},{"imgID":"20190404085111681","PID":"003","ID":"019","TID":"019"},{"imgID":"20190404085125409","PID":"003","ID":"020","TID":"020"},{"imgID":"20190404085138872","PID":"003","ID":"021","TID":"021"},{"imgID":"20190404085152694","PID":"003","ID":"022","TID":"022"},{"imgID":"20190404085206406","PID":"003","ID":"023","TID":"023"},{"imgID":"20190404085219853","PID":"003","ID":"024","TID":"024"},{"imgID":"20190404085233738","PID":"003","ID":"025","TID":"025"},{"imgID":"20190404085247200","PID":"003","ID":"026","TID":"026"},{"imgID":"20190404085300897","PID":"003","ID":"027","TID":"027"},{"imgID":"20190404085320257","PID":"003","ID":"028","TID":"028"},{"imgID":"20190404085334437","PID":"003","ID":"029","TID":"029"},{"imgID":"20190404085348446","PID":"003","ID":"030","TID":"030"},{"imgID":"20190404085402096","PID":"003","ID":"031","TID":"031"},{"imgID":"20190404085415684","PID":"003","ID":"032","TID":"032"},{"imgID":"20190404085429022","PID":"003","ID":"033","TID":"033"},{"imgID":"20190404085442750","PID":"003","ID":"034","TID":"034"},{"imgID":"20190404085455729","PID":"003","ID":"035","TID":"035"},{"imgID":"20190404085509894","PID":"003","ID":"036","TID":"036"},{"imgID":"20190404085524215","PID":"003","ID":"037","TID":"037"},{"imgID":"20190404085537958","PID":"003","ID":"038","TID":"038"},{"imgID":"20190404085557801","PID":"003","ID":"039","TID":"039"},{"imgID":"20190404085611623","PID":"003","ID":"040","TID":"040"},{"imgID":"20190404085625694","PID":"003","ID":"041","TID":"041"},{"imgID":"20190404085641310","PID":"003","ID":"042","TID":"042"},{"imgID":"20190404085655303","PID":"003","ID":"043","TID":"043"},{"imgID":"20190404085708672","PID":"003","ID":"044","TID":"044"},{"imgID":"20190404085722697","PID":"003","ID":"045","TID":"045"},{"imgID":"20190404085742134","PID":"003","ID":"046","TID":"046"},{"imgID":"20190404085801042","PID":"003","ID":"047","TID":"047"},{"imgID":"20190404085814614","PID":"003","ID":"048","TID":"048"},{"imgID":"20190404085827312","PID":"003","ID":"049","TID":"049"},{"imgID":"20190404085841415","PID":"003","ID":"050","TID":"050"},{"imgID":"20190404085855392","PID":"003","ID":"051","TID":"051"},{"imgID":"20190404085913145","PID":"003","ID":"052","TID":"052"},{"imgID":"20190404085927622","PID":"003","ID":"053","TID":"053"},{"imgID":"20190404085941896","PID":"003","ID":"054","TID":"054"},{"imgID":"20190404090001053","PID":"003","ID":"055","TID":"055"},{"imgID":"20190404090014640","PID":"003","ID":"056","TID":"056"},{"imgID":"20190404090028914","PID":"003","ID":"057","TID":"057"},{"imgID":"20190404090042830","PID":"003","ID":"058","TID":"058"},{"imgID":"20190404090056885","PID":"003","ID":"059","TID":"059"},{"imgID":"20190404090110426","PID":"003","ID":"060","TID":"060"},{"imgID":"20190404090124669","PID":"003","ID":"061","TID":"061"},{"imgID":"20190404090138412","PID":"003","ID":"062","TID":"062"},{"imgID":"20190404090152484","PID":"003","ID":"063","TID":"063"},{"imgID":"20190404090206633","PID":"003","ID":"064","TID":"064"},{"imgID":"20190404090220938","PID":"003","ID":"065","TID":"065"},{"imgID":"20190404090235119","PID":"003","ID":"066","TID":"066"},{"imgID":"20190404090249455","PID":"003","ID":"067","TID":"067"},{"imgID":"20190404090303230","PID":"003","ID":"068","TID":"068"},{"imgID":"20190404090317067","PID":"003","ID":"069","TID":"069"},{"imgID":"20190404090331169","PID":"003","ID":"070","TID":"070"},{"imgID":"20190404090345303","PID":"003","ID":"071","TID":"071"},{"imgID":"20190404090359187","PID":"003","ID":"072","TID":"072"},{"imgID":"20190404090418562","PID":"003","ID":"073","TID":"073"},{"imgID":"20190404090432727","PID":"003","ID":"074","TID":"074"},{"imgID":"20190404090446954","PID":"003","ID":"075","TID":"075"},{"imgID":"20190404090501057","PID":"003","ID":"076","TID":"076"},{"imgID":"20190404090515456","PID":"003","ID":"077","TID":"077"},{"imgID":"20190404090528840","PID":"003","ID":"078","TID":"078"},{"imgID":"20190404090543130","PID":"003","ID":"079","TID":"079"},{"imgID":"20190404090556531","PID":"003","ID":"080","TID":"080"},{"imgID":"20190404090610649","PID":"003","ID":"081","TID":"081"},{"imgID":"20190404090625157","PID":"003","ID":"082","TID":"082"},{"imgID":"20190404090639087","PID":"003","ID":"083","TID":"083"},{"imgID":"20190404090653065","PID":"003","ID":"084","TID":"084"},{"imgID":"20190404090707027","PID":"003","ID":"085","TID":"085"},{"imgID":"20190404090721098","PID":"003","ID":"086","TID":"086"},{"imgID":"20190404090735684","PID":"003","ID":"087","TID":"087"},{"imgID":"20190404090749225","PID":"003","ID":"088","TID":"088"},{"imgID":"20190404090803281","PID":"003","ID":"089","TID":"089"},{"imgID":"20190404090817274","PID":"003","ID":"090","TID":"090"},{"imgID":"20190404090831454","PID":"003","ID":"091","TID":"091"},{"imgID":"20190404090845557","PID":"003","ID":"092","TID":"092"},{"imgID":"20190404090905353","PID":"003","ID":"093","TID":"093"},{"imgID":"20190404090925150","PID":"003","ID":"094","TID":"094"},{"imgID":"20190404090939533","PID":"003","ID":"095","TID":"095"},{"imgID":"20190404090953542","PID":"003","ID":"096","TID":"096"},{"imgID":"20190404091007566","PID":"003","ID":"097","TID":"097"},{"imgID":"20190404091021247","PID":"003","ID":"098","TID":"098"},{"imgID":"20190404091034991","PID":"003","ID":"099","TID":"099"},{"imgID":"20190404091049265","PID":"003","ID":"100","TID":"100"},{"imgID":"20190404091102962","PID":"003","ID":"101","TID":"101"},{"imgID":"20190404091117049","PID":"003","ID":"102","TID":"102"},{"imgID":"20190404091130948","PID":"003","ID":"103","TID":"103"},{"imgID":"20190404091144692","PID":"003","ID":"104","TID":"104"},{"imgID":"20190404091204847","PID":"003","ID":"105","TID":"105"},{"imgID":"20190404091218716","PID":"003","ID":"106","TID":"106"},{"imgID":"20190404091233239","PID":"003","ID":"107","TID":"107"},{"imgID":"20190404091247076","PID":"003","ID":"108","TID":"108"},{"imgID":"20190404091305874","PID":"003","ID":"109","TID":"109"},{"imgID":"20190404091318901","PID":"003","ID":"110","TID":"110"},{"imgID":"20190404091333081","PID":"003","ID":"111","TID":"111"},{"imgID":"20190404091347963","PID":"003","ID":"112","TID":"112"},{"imgID":"20190404091406543","PID":"003","ID":"113","TID":"113"},{"imgID":"20190404091420801","PID":"003","ID":"114","TID":"114"},{"imgID":"20190404091437509","PID":"003","ID":"115","TID":"115"},{"imgID":"20190404091457040","PID":"003","ID":"116","TID":"116"},{"imgID":"20190404091516868","PID":"003","ID":"117","TID":"117"},{"imgID":"20190404091536134","PID":"003","ID":"118","TID":"118"},{"imgID":"20190404091549488","PID":"003","ID":"119","TID":"119"},{"imgID":"20190404091603824","PID":"003","ID":"120","TID":"120"},{"imgID":"20190404091620984","PID":"003","ID":"121","TID":"121"},{"imgID":"20190404091634837","PID":"003","ID":"122","TID":"122"},{"imgID":"20190404091655663","PID":"003","ID":"123","TID":"123"},{"imgID":"20190404091709219","PID":"003","ID":"124","TID":"124"},{"imgID":"20190404091722464","PID":"003","ID":"125","TID":"125"},{"imgID":"20190404091735958","PID":"003","ID":"126","TID":"126"},{"imgID":"20190404091750154","PID":"003","ID":"127","TID":"127"},{"imgID":"20190404091803663","PID":"003","ID":"128","TID":"128"},{"imgID":"20190404091817173","PID":"003","ID":"129","TID":"129"},{"imgID":"20190404091831135","PID":"003","ID":"130","TID":"130"},{"imgID":"20190404091845503","PID":"003","ID":"131","TID":"131"},{"imgID":"20190404091905206","PID":"003","ID":"132","TID":"132"},{"imgID":"20190404091919277","PID":"003","ID":"133","TID":"133"},{"imgID":"20190404091932724","PID":"003","ID":"134","TID":"134"},{"imgID":"20190404091946483","PID":"003","ID":"135","TID":"135"},{"imgID":"20190404092000913","PID":"003","ID":"136","TID":"136"},{"imgID":"20190404092014407","PID":"003","ID":"137","TID":"137"},{"imgID":"20190404092028166","PID":"003","ID":"138","TID":"138"},{"imgID":"20190404092041707","PID":"003","ID":"139","TID":"139"},{"imgID":"20190404092055638","PID":"003","ID":"140","TID":"140"},{"imgID":"20190404092116371","PID":"003","ID":"141","TID":"141"},{"imgID":"20190404092138538","PID":"003","ID":"142","TID":"142"},{"imgID":"20190404092151486","PID":"003","ID":"143","TID":"143"},{"imgID":"20190404092205043","PID":"003","ID":"144","TID":"144"},{"imgID":"20190404092218459","PID":"003","ID":"145","TID":"145"},{"imgID":"20190404092232545","PID":"003","ID":"146","TID":"146"},{"imgID":"20190404092247272","PID":"003","ID":"147","TID":"147"},{"imgID":"20190404092300860","PID":"003","ID":"148","TID":"148"},{"imgID":"20190404092319564","PID":"003","ID":"149","TID":"149"},{"imgID":"20190404092339579","PID":"003","ID":"150","TID":"150"},{"imgID":"20190404092352340","PID":"003","ID":"151","TID":"151"},{"imgID":"20190404092405646","PID":"003","ID":"152","TID":"152"},{"imgID":"20190404092418298","PID":"003","ID":"153","TID":"153"},{"imgID":"20190404092431823","PID":"003","ID":"154","TID":"154"},{"imgID":"20190404092445052","PID":"003","ID":"155","TID":"155"},{"imgID":"20190404092458858","PID":"003","ID":"156","TID":"156"},{"imgID":"20190404092511541","PID":"004","ID":"157","TID":"157"}],
+
+	toRemoveDupNumFromCn: function(cn) { //이미지뷰어 서비스에서 복본인 경우, K2-14,K2-14-1,.., K2-14-12, 원문이미지뷰어: K2-14:8
+		if(cn.indexOf(":")>0)
+			return s.strLeftBack(cn, ":");
+		
+		//if(cn.split(cn,"-").length>=3)
+		//	return s.strLeftBack(cn, "-");
+		
+		return cn;
+	},
+	getBaseCn: function() {
+		return toRemoveDupNumFromCn(this.cn);
+	},
+	getCurId: function() {
+		return this.imgItems[this.imgIdx]['ID'];
+	},
+	getCurTId: function() {
+		var TId = this.imgItems[this.imgIdx]['TID'];
+		if(!TId)
+			TId = this.imgItems[this.imgIdx]['ID'];
+		return TId;
+	},
+	getCurImgId: function() {
+		return this.imgItems[this.imgIdx]['imgID'];
+	},
+	getCurPId: function() {
+		return this.imgItems[this.imgIdx]['PID'];
+	},
+	Id2TId: function(id) {
+		var item = _.find(this.imgItems, function(x) { return x["ID"]==id;});
+		if(item && item['TID'])
+			return item['TID'];
+		else
+			return id;
+	},
+	TId2Id: function(tId) {
+		var item = _.find(this.imgItems, function(x) { return x["TID"]==tId;});
+		if(item && item['ID'])
+			return item['ID'];
+		else
+			return tId;
+	},
+	getImagePath: function() {
+		var id = this.getCurImgId();
+		if(this.viewerType=='Y') {
+			var id = this.getCurImgId(); //http://jsgimage.aks.ac.kr/data/images/2016/12/01/dzi/20161201175401897.xml
+			var dzi = id.substring(0, 4)+'/'+id.substring(4, 6)+'/'+id.substring(6, 8)+'/dzi/'+id+'.xml';
+			return 'http://jsgimage.aks.ac.kr/data/images/'+dzi;
+			/*
+			if(id.substring(0, 4)>="2020")
+				return 'http://jsgimage.aks.ac.kr/data3/images/'+dzi;
+			else if(id.substring(0, 4)>="2018")
+				return 'http://jsgimage.aks.ac.kr/data2/images/'+dzi;
+			else
+				return 'http://jsgimage.aks.ac.kr/data/images/'+dzi;
+			*/
+		} else {
+			return '/viewer/getImage?imgID='+encodeURI(dataJSon.getCurImgId());
+			
+		}
+	},
+	getCurDownId: function(isbook) {
+		if(isbook)
+			return this.cn+'_'+this.vol;
+		else
+			return this.cn+'_'+this.vol+'_'+this.imgItems[this.imgIdx]['ID'];
+	},
+	toImgPgIdFromGsPgId: function(gisaPgId) {
+		var gisaPgNum = parseInt(gisaPgId.substring(0,gisaPgId.length-1))+this.startGisaPgNum;
+		if(gisaPgId[gisaPgId.length-1]=='b')
+			gisaPgNum++;
+		//console.log(s.lpad(gisaPgNum.toString(), 3, '0'));
+		return this.TId2Id(s.lpad(gisaPgNum.toString(), 3, '0'));
+	},
+	toGsPgIdFromImgId: function(type) {
+		type = type || 'b';
+		var gisaPgId = parseInt(this.getCurTId())-this.startGisaPgNum;
+		if(type == 'a')
+			return gisaPgId.toString()+'a';
+		else
+			return (gisaPgId-1).toString()+'b';
+	},
+	toImgIdFromGsPgId: function(pgId) {
+		if(!pgId || pgId.length<2)
+			return pgId;
+		
+		//console.log('toImgIdFromGsPgId');
+		var pgNum = pgId.substring(0,pgId.length-1);
+		var pgType = pgId.charAt(pgId.length-1);
+		
+		var imgId = parseInt(pgNum)+this.startGisaPgNum;
+		if(pgType == 'a') {
+			return s.lpad(imgId.toString(), 3, '0')+'左';
+		} else {
+			imgId++;
+			return s.lpad(imgId.toString(), 3, '0')+'右';
+		}
+	}
+};
+
+IV.init();
+
+$(document).ready(function(){
+	$("#navi_img_count").text(dataJSon.imgItems.length);
+	
+	$("#volSelect").val("001");
+	$('#volSelect').change(function () {
+		var vol = $('#volSelect option:selected').val();
+		window.location.href="?dataId="+encodeURIComponent('K1-151|'+vol);
+	})
+	
+	var hasUrl = Backbone.history.getFragment();
+	if(!hasUrl) {
+		appRouter.navigate('/node?depth=2&upPath='+dataJSon.getCurPId()+'&dataId='+dataJSon.getCurId(), { trigger: true });
+	}
+	
+	
+	
+	
+		$(".viewer__wrap__tree__header .tab.heje").addClass("on");
+		$(".viewer__wrap__text__heje").show();
+	
+	
+});
+</script>
+
+<form id="downloadJsgImageForm" method="get" action="http://jsgimage.aks.ac.kr/downImgAskReq" target='downImgAsk'>
+	<input type="hidden" name="downself" value="Y" >
+	<input type="hidden" name="id">
+</form>
+
+<header class="viewer__header">
+	<a href="/" target="_blank" class="logo"><img src="/resources/images/logo_n.png"/></a>
+	<h1>
+		
+		중용장구대전(中庸章句大全)
+		
+		
+	</h1>
+	<div class="wrap__text__chk">
+		
+		
+
+
+
+	<a class="btn__list--small c03" id="btn_sj_heje_pop">서지/해제</a>
+	
+	
+	<span class="btngrp">
+		<a class="btn__list--small c03 layerbtn">관련정보</a>
+		<span class="btn_wrap pop_mark">
+			<a class="btn__list--small img01" onclick="goOrgDataView('IMOK_JSG','IMOK_K1-151_001')">이미지</a>
+			<a class="btn__list--small img02" onclick="goOrgDataView('IMG_JSG','IMG_20190404084707182','K1-151_001')">이미지(장)</a>
+			
+			<a class="btn__list--small c03 debug" onclick="goXmlView('IMOK_JSG','IMOK_K1-151_001')">목차xml</a>
+			
+		</span>
+	</span>
+
+
+
+
+
+		<span style='margin:0 5px; color:#055058; line-height:20px; font-size:20px; text-shadow:-1px 0 0 #4e9292;'>|</span>		
+		<a class="btnLink" onclick="pupupQnaMe()">오류신고</a>
+		<a class="btnLink" onclick="copyUrlMe()">URL복사</a>
+	</div>		
+	<a class="btn__viewer__close" onclick="window.close()"><img src="/resources/images/btn-viewer-close.png" alt="닫기" /></a>
+</header>
+
+<div class="viewer__wrap viewer__wrap--tree--open viewer__wrap--text--open">
+	<div class="viewer__wrap__tree">
+		<div class="viewer__wrap__tree__header">
+           	<span class="tit">목차보기</span>
+           				
+		</div>	
+		<ul class="simpleTree V1 V2 V3">
+			<li class="root">
+				<ul data-root-name='원문이미지'>
+<li data-dataId='001' data-depth='1' data-url='?depth=1&dataId=001'><span title='表紙(前)'>表紙(前)</span>
+	<ul>
+	<li data-dataId='001' data-depth='2' data-url='?depth=2&upPath=001&dataId=001'><span title='001 中庸章句大全 單'>001 中庸章句大全 單</span></li>
+	</ul>
+</li>
+<li data-dataId='002' data-depth='1' data-url='?depth=1&dataId=002'><span title='目錄'>目錄</span>
+	<ul>
+	<li data-dataId='002' data-depth='2' data-url='?depth=2&upPath=002&dataId=002'><span title='002 目錄'>002 目錄</span></li>
+	<li data-dataId='003' data-depth='2' data-url='?depth=2&upPath=002&dataId=003'><span title='003'>003</span></li>
+	<li data-dataId='004' data-depth='2' data-url='?depth=2&upPath=002&dataId=004'><span title='004'>004</span></li>
+	<li data-dataId='005' data-depth='2' data-url='?depth=2&upPath=002&dataId=005'><span title='005'>005</span></li>
+	<li data-dataId='006' data-depth='2' data-url='?depth=2&upPath=002&dataId=006'><span title='006'>006</span></li>
+	<li data-dataId='007' data-depth='2' data-url='?depth=2&upPath=002&dataId=007'><span title='007'>007</span></li>
+	<li data-dataId='008' data-depth='2' data-url='?depth=2&upPath=002&dataId=008'><span title='008'>008</span></li>
+	<li data-dataId='009' data-depth='2' data-url='?depth=2&upPath=002&dataId=009'><span title='009'>009</span></li>
+	<li data-dataId='010' data-depth='2' data-url='?depth=2&upPath=002&dataId=010'><span title='010'>010</span></li>
+	<li data-dataId='011' data-depth='2' data-url='?depth=2&upPath=002&dataId=011'><span title='011'>011</span></li>
+	<li data-dataId='012' data-depth='2' data-url='?depth=2&upPath=002&dataId=012'><span title='012'>012</span></li>
+	</ul>
+</li>
+<li data-dataId='003' data-depth='1' data-url='?depth=1&dataId=003'><span title='中庸章句大全'>中庸章句大全</span>
+	<ul>
+	<li data-dataId='013' data-depth='2' data-url='?depth=2&upPath=003&dataId=013'><span title='013 中庸章句大全'>013 中庸章句大全</span></li>
+	<li data-dataId='014' data-depth='2' data-url='?depth=2&upPath=003&dataId=014'><span title='014'>014</span></li>
+	<li data-dataId='015' data-depth='2' data-url='?depth=2&upPath=003&dataId=015'><span title='015'>015</span></li>
+	<li data-dataId='016' data-depth='2' data-url='?depth=2&upPath=003&dataId=016'><span title='016'>016</span></li>
+	<li data-dataId='017' data-depth='2' data-url='?depth=2&upPath=003&dataId=017'><span title='017'>017</span></li>
+	<li data-dataId='018' data-depth='2' data-url='?depth=2&upPath=003&dataId=018'><span title='018'>018</span></li>
+	<li data-dataId='019' data-depth='2' data-url='?depth=2&upPath=003&dataId=019'><span title='019'>019</span></li>
+	<li data-dataId='020' data-depth='2' data-url='?depth=2&upPath=003&dataId=020'><span title='020'>020</span></li>
+	<li data-dataId='021' data-depth='2' data-url='?depth=2&upPath=003&dataId=021'><span title='021'>021</span></li>
+	<li data-dataId='022' data-depth='2' data-url='?depth=2&upPath=003&dataId=022'><span title='022'>022</span></li>
+	<li data-dataId='023' data-depth='2' data-url='?depth=2&upPath=003&dataId=023'><span title='023'>023</span></li>
+	<li data-dataId='024' data-depth='2' data-url='?depth=2&upPath=003&dataId=024'><span title='024'>024</span></li>
+	<li data-dataId='025' data-depth='2' data-url='?depth=2&upPath=003&dataId=025'><span title='025'>025</span></li>
+	<li data-dataId='026' data-depth='2' data-url='?depth=2&upPath=003&dataId=026'><span title='026'>026</span></li>
+	<li data-dataId='027' data-depth='2' data-url='?depth=2&upPath=003&dataId=027'><span title='027'>027</span></li>
+	<li data-dataId='028' data-depth='2' data-url='?depth=2&upPath=003&dataId=028'><span title='028'>028</span></li>
+	<li data-dataId='029' data-depth='2' data-url='?depth=2&upPath=003&dataId=029'><span title='029'>029</span></li>
+	<li data-dataId='030' data-depth='2' data-url='?depth=2&upPath=003&dataId=030'><span title='030'>030</span></li>
+	<li data-dataId='031' data-depth='2' data-url='?depth=2&upPath=003&dataId=031'><span title='031'>031</span></li>
+	<li data-dataId='032' data-depth='2' data-url='?depth=2&upPath=003&dataId=032'><span title='032'>032</span></li>
+	<li data-dataId='033' data-depth='2' data-url='?depth=2&upPath=003&dataId=033'><span title='033'>033</span></li>
+	<li data-dataId='034' data-depth='2' data-url='?depth=2&upPath=003&dataId=034'><span title='034'>034</span></li>
+	<li data-dataId='035' data-depth='2' data-url='?depth=2&upPath=003&dataId=035'><span title='035'>035</span></li>
+	<li data-dataId='036' data-depth='2' data-url='?depth=2&upPath=003&dataId=036'><span title='036'>036</span></li>
+	<li data-dataId='037' data-depth='2' data-url='?depth=2&upPath=003&dataId=037'><span title='037'>037</span></li>
+	<li data-dataId='038' data-depth='2' data-url='?depth=2&upPath=003&dataId=038'><span title='038'>038</span></li>
+	<li data-dataId='039' data-depth='2' data-url='?depth=2&upPath=003&dataId=039'><span title='039'>039</span></li>
+	<li data-dataId='040' data-depth='2' data-url='?depth=2&upPath=003&dataId=040'><span title='040'>040</span></li>
+	<li data-dataId='041' data-depth='2' data-url='?depth=2&upPath=003&dataId=041'><span title='041'>041</span></li>
+	<li data-dataId='042' data-depth='2' data-url='?depth=2&upPath=003&dataId=042'><span title='042'>042</span></li>
+	<li data-dataId='043' data-depth='2' data-url='?depth=2&upPath=003&dataId=043'><span title='043'>043</span></li>
+	<li data-dataId='044' data-depth='2' data-url='?depth=2&upPath=003&dataId=044'><span title='044'>044</span></li>
+	<li data-dataId='045' data-depth='2' data-url='?depth=2&upPath=003&dataId=045'><span title='045'>045</span></li>
+	<li data-dataId='046' data-depth='2' data-url='?depth=2&upPath=003&dataId=046'><span title='046'>046</span></li>
+	<li data-dataId='047' data-depth='2' data-url='?depth=2&upPath=003&dataId=047'><span title='047'>047</span></li>
+	<li data-dataId='048' data-depth='2' data-url='?depth=2&upPath=003&dataId=048'><span title='048'>048</span></li>
+	<li data-dataId='049' data-depth='2' data-url='?depth=2&upPath=003&dataId=049'><span title='049'>049</span></li>
+	<li data-dataId='050' data-depth='2' data-url='?depth=2&upPath=003&dataId=050'><span title='050'>050</span></li>
+	<li data-dataId='051' data-depth='2' data-url='?depth=2&upPath=003&dataId=051'><span title='051'>051</span></li>
+	<li data-dataId='052' data-depth='2' data-url='?depth=2&upPath=003&dataId=052'><span title='052'>052</span></li>
+	<li data-dataId='053' data-depth='2' data-url='?depth=2&upPath=003&dataId=053'><span title='053'>053</span></li>
+	<li data-dataId='054' data-depth='2' data-url='?depth=2&upPath=003&dataId=054'><span title='054'>054</span></li>
+	<li data-dataId='055' data-depth='2' data-url='?depth=2&upPath=003&dataId=055'><span title='055'>055</span></li>
+	<li data-dataId='056' data-depth='2' data-url='?depth=2&upPath=003&dataId=056'><span title='056'>056</span></li>
+	<li data-dataId='057' data-depth='2' data-url='?depth=2&upPath=003&dataId=057'><span title='057'>057</span></li>
+	<li data-dataId='058' data-depth='2' data-url='?depth=2&upPath=003&dataId=058'><span title='058'>058</span></li>
+	<li data-dataId='059' data-depth='2' data-url='?depth=2&upPath=003&dataId=059'><span title='059'>059</span></li>
+	<li data-dataId='060' data-depth='2' data-url='?depth=2&upPath=003&dataId=060'><span title='060'>060</span></li>
+	<li data-dataId='061' data-depth='2' data-url='?depth=2&upPath=003&dataId=061'><span title='061'>061</span></li>
+	<li data-dataId='062' data-depth='2' data-url='?depth=2&upPath=003&dataId=062'><span title='062'>062</span></li>
+	<li data-dataId='063' data-depth='2' data-url='?depth=2&upPath=003&dataId=063'><span title='063'>063</span></li>
+	<li data-dataId='064' data-depth='2' data-url='?depth=2&upPath=003&dataId=064'><span title='064'>064</span></li>
+	<li data-dataId='065' data-depth='2' data-url='?depth=2&upPath=003&dataId=065'><span title='065'>065</span></li>
+	<li data-dataId='066' data-depth='2' data-url='?depth=2&upPath=003&dataId=066'><span title='066'>066</span></li>
+	<li data-dataId='067' data-depth='2' data-url='?depth=2&upPath=003&dataId=067'><span title='067'>067</span></li>
+	<li data-dataId='068' data-depth='2' data-url='?depth=2&upPath=003&dataId=068'><span title='068'>068</span></li>
+	<li data-dataId='069' data-depth='2' data-url='?depth=2&upPath=003&dataId=069'><span title='069'>069</span></li>
+	<li data-dataId='070' data-depth='2' data-url='?depth=2&upPath=003&dataId=070'><span title='070'>070</span></li>
+	<li data-dataId='071' data-depth='2' data-url='?depth=2&upPath=003&dataId=071'><span title='071'>071</span></li>
+	<li data-dataId='072' data-depth='2' data-url='?depth=2&upPath=003&dataId=072'><span title='072'>072</span></li>
+	<li data-dataId='073' data-depth='2' data-url='?depth=2&upPath=003&dataId=073'><span title='073'>073</span></li>
+	<li data-dataId='074' data-depth='2' data-url='?depth=2&upPath=003&dataId=074'><span title='074'>074</span></li>
+	<li data-dataId='075' data-depth='2' data-url='?depth=2&upPath=003&dataId=075'><span title='075'>075</span></li>
+	<li data-dataId='076' data-depth='2' data-url='?depth=2&upPath=003&dataId=076'><span title='076'>076</span></li>
+	<li data-dataId='077' data-depth='2' data-url='?depth=2&upPath=003&dataId=077'><span title='077'>077</span></li>
+	<li data-dataId='078' data-depth='2' data-url='?depth=2&upPath=003&dataId=078'><span title='078'>078</span></li>
+	<li data-dataId='079' data-depth='2' data-url='?depth=2&upPath=003&dataId=079'><span title='079'>079</span></li>
+	<li data-dataId='080' data-depth='2' data-url='?depth=2&upPath=003&dataId=080'><span title='080'>080</span></li>
+	<li data-dataId='081' data-depth='2' data-url='?depth=2&upPath=003&dataId=081'><span title='081'>081</span></li>
+	<li data-dataId='082' data-depth='2' data-url='?depth=2&upPath=003&dataId=082'><span title='082'>082</span></li>
+	<li data-dataId='083' data-depth='2' data-url='?depth=2&upPath=003&dataId=083'><span title='083'>083</span></li>
+	<li data-dataId='084' data-depth='2' data-url='?depth=2&upPath=003&dataId=084'><span title='084'>084</span></li>
+	<li data-dataId='085' data-depth='2' data-url='?depth=2&upPath=003&dataId=085'><span title='085'>085</span></li>
+	<li data-dataId='086' data-depth='2' data-url='?depth=2&upPath=003&dataId=086'><span title='086'>086</span></li>
+	<li data-dataId='087' data-depth='2' data-url='?depth=2&upPath=003&dataId=087'><span title='087'>087</span></li>
+	<li data-dataId='088' data-depth='2' data-url='?depth=2&upPath=003&dataId=088'><span title='088'>088</span></li>
+	<li data-dataId='089' data-depth='2' data-url='?depth=2&upPath=003&dataId=089'><span title='089'>089</span></li>
+	<li data-dataId='090' data-depth='2' data-url='?depth=2&upPath=003&dataId=090'><span title='090'>090</span></li>
+	<li data-dataId='091' data-depth='2' data-url='?depth=2&upPath=003&dataId=091'><span title='091'>091</span></li>
+	<li data-dataId='092' data-depth='2' data-url='?depth=2&upPath=003&dataId=092'><span title='092'>092</span></li>
+	<li data-dataId='093' data-depth='2' data-url='?depth=2&upPath=003&dataId=093'><span title='093'>093</span></li>
+	<li data-dataId='094' data-depth='2' data-url='?depth=2&upPath=003&dataId=094'><span title='094'>094</span></li>
+	<li data-dataId='095' data-depth='2' data-url='?depth=2&upPath=003&dataId=095'><span title='095'>095</span></li>
+	<li data-dataId='096' data-depth='2' data-url='?depth=2&upPath=003&dataId=096'><span title='096'>096</span></li>
+	<li data-dataId='097' data-depth='2' data-url='?depth=2&upPath=003&dataId=097'><span title='097'>097</span></li>
+	<li data-dataId='098' data-depth='2' data-url='?depth=2&upPath=003&dataId=098'><span title='098'>098</span></li>
+	<li data-dataId='099' data-depth='2' data-url='?depth=2&upPath=003&dataId=099'><span title='099'>099</span></li>
+	<li data-dataId='100' data-depth='2' data-url='?depth=2&upPath=003&dataId=100'><span title='100'>100</span></li>
+	<li data-dataId='101' data-depth='2' data-url='?depth=2&upPath=003&dataId=101'><span title='101'>101</span></li>
+	<li data-dataId='102' data-depth='2' data-url='?depth=2&upPath=003&dataId=102'><span title='102'>102</span></li>
+	<li data-dataId='103' data-depth='2' data-url='?depth=2&upPath=003&dataId=103'><span title='103'>103</span></li>
+	<li data-dataId='104' data-depth='2' data-url='?depth=2&upPath=003&dataId=104'><span title='104'>104</span></li>
+	<li data-dataId='105' data-depth='2' data-url='?depth=2&upPath=003&dataId=105'><span title='105'>105</span></li>
+	<li data-dataId='106' data-depth='2' data-url='?depth=2&upPath=003&dataId=106'><span title='106'>106</span></li>
+	<li data-dataId='107' data-depth='2' data-url='?depth=2&upPath=003&dataId=107'><span title='107'>107</span></li>
+	<li data-dataId='108' data-depth='2' data-url='?depth=2&upPath=003&dataId=108'><span title='108'>108</span></li>
+	<li data-dataId='109' data-depth='2' data-url='?depth=2&upPath=003&dataId=109'><span title='109'>109</span></li>
+	<li data-dataId='110' data-depth='2' data-url='?depth=2&upPath=003&dataId=110'><span title='110'>110</span></li>
+	<li data-dataId='111' data-depth='2' data-url='?depth=2&upPath=003&dataId=111'><span title='111'>111</span></li>
+	<li data-dataId='112' data-depth='2' data-url='?depth=2&upPath=003&dataId=112'><span title='112'>112</span></li>
+	<li data-dataId='113' data-depth='2' data-url='?depth=2&upPath=003&dataId=113'><span title='113'>113</span></li>
+	<li data-dataId='114' data-depth='2' data-url='?depth=2&upPath=003&dataId=114'><span title='114'>114</span></li>
+	<li data-dataId='115' data-depth='2' data-url='?depth=2&upPath=003&dataId=115'><span title='115'>115</span></li>
+	<li data-dataId='116' data-depth='2' data-url='?depth=2&upPath=003&dataId=116'><span title='116'>116</span></li>
+	<li data-dataId='117' data-depth='2' data-url='?depth=2&upPath=003&dataId=117'><span title='117'>117</span></li>
+	<li data-dataId='118' data-depth='2' data-url='?depth=2&upPath=003&dataId=118'><span title='118'>118</span></li>
+	<li data-dataId='119' data-depth='2' data-url='?depth=2&upPath=003&dataId=119'><span title='119'>119</span></li>
+	<li data-dataId='120' data-depth='2' data-url='?depth=2&upPath=003&dataId=120'><span title='120'>120</span></li>
+	<li data-dataId='121' data-depth='2' data-url='?depth=2&upPath=003&dataId=121'><span title='121'>121</span></li>
+	<li data-dataId='122' data-depth='2' data-url='?depth=2&upPath=003&dataId=122'><span title='122'>122</span></li>
+	<li data-dataId='123' data-depth='2' data-url='?depth=2&upPath=003&dataId=123'><span title='123'>123</span></li>
+	<li data-dataId='124' data-depth='2' data-url='?depth=2&upPath=003&dataId=124'><span title='124'>124</span></li>
+	<li data-dataId='125' data-depth='2' data-url='?depth=2&upPath=003&dataId=125'><span title='125'>125</span></li>
+	<li data-dataId='126' data-depth='2' data-url='?depth=2&upPath=003&dataId=126'><span title='126'>126</span></li>
+	<li data-dataId='127' data-depth='2' data-url='?depth=2&upPath=003&dataId=127'><span title='127'>127</span></li>
+	<li data-dataId='128' data-depth='2' data-url='?depth=2&upPath=003&dataId=128'><span title='128'>128</span></li>
+	<li data-dataId='129' data-depth='2' data-url='?depth=2&upPath=003&dataId=129'><span title='129'>129</span></li>
+	<li data-dataId='130' data-depth='2' data-url='?depth=2&upPath=003&dataId=130'><span title='130'>130</span></li>
+	<li data-dataId='131' data-depth='2' data-url='?depth=2&upPath=003&dataId=131'><span title='131'>131</span></li>
+	<li data-dataId='132' data-depth='2' data-url='?depth=2&upPath=003&dataId=132'><span title='132'>132</span></li>
+	<li data-dataId='133' data-depth='2' data-url='?depth=2&upPath=003&dataId=133'><span title='133'>133</span></li>
+	<li data-dataId='134' data-depth='2' data-url='?depth=2&upPath=003&dataId=134'><span title='134'>134</span></li>
+	<li data-dataId='135' data-depth='2' data-url='?depth=2&upPath=003&dataId=135'><span title='135'>135</span></li>
+	<li data-dataId='136' data-depth='2' data-url='?depth=2&upPath=003&dataId=136'><span title='136'>136</span></li>
+	<li data-dataId='137' data-depth='2' data-url='?depth=2&upPath=003&dataId=137'><span title='137'>137</span></li>
+	<li data-dataId='138' data-depth='2' data-url='?depth=2&upPath=003&dataId=138'><span title='138'>138</span></li>
+	<li data-dataId='139' data-depth='2' data-url='?depth=2&upPath=003&dataId=139'><span title='139'>139</span></li>
+	<li data-dataId='140' data-depth='2' data-url='?depth=2&upPath=003&dataId=140'><span title='140'>140</span></li>
+	<li data-dataId='141' data-depth='2' data-url='?depth=2&upPath=003&dataId=141'><span title='141'>141</span></li>
+	<li data-dataId='142' data-depth='2' data-url='?depth=2&upPath=003&dataId=142'><span title='142'>142</span></li>
+	<li data-dataId='143' data-depth='2' data-url='?depth=2&upPath=003&dataId=143'><span title='143'>143</span></li>
+	<li data-dataId='144' data-depth='2' data-url='?depth=2&upPath=003&dataId=144'><span title='144'>144</span></li>
+	<li data-dataId='145' data-depth='2' data-url='?depth=2&upPath=003&dataId=145'><span title='145'>145</span></li>
+	<li data-dataId='146' data-depth='2' data-url='?depth=2&upPath=003&dataId=146'><span title='146'>146</span></li>
+	<li data-dataId='147' data-depth='2' data-url='?depth=2&upPath=003&dataId=147'><span title='147'>147</span></li>
+	<li data-dataId='148' data-depth='2' data-url='?depth=2&upPath=003&dataId=148'><span title='148'>148</span></li>
+	<li data-dataId='149' data-depth='2' data-url='?depth=2&upPath=003&dataId=149'><span title='149'>149</span></li>
+	<li data-dataId='150' data-depth='2' data-url='?depth=2&upPath=003&dataId=150'><span title='150'>150</span></li>
+	<li data-dataId='151' data-depth='2' data-url='?depth=2&upPath=003&dataId=151'><span title='151'>151</span></li>
+	<li data-dataId='152' data-depth='2' data-url='?depth=2&upPath=003&dataId=152'><span title='152'>152</span></li>
+	<li data-dataId='153' data-depth='2' data-url='?depth=2&upPath=003&dataId=153'><span title='153'>153</span></li>
+	<li data-dataId='154' data-depth='2' data-url='?depth=2&upPath=003&dataId=154'><span title='154'>154</span></li>
+	<li data-dataId='155' data-depth='2' data-url='?depth=2&upPath=003&dataId=155'><span title='155'>155</span></li>
+	<li data-dataId='156' data-depth='2' data-url='?depth=2&upPath=003&dataId=156'><span title='156'>156</span></li>
+	</ul>
+</li>
+<li data-dataId='004' data-depth='1' data-url='?depth=1&dataId=004'><span title='表紙(後)'>表紙(後)</span>
+	<ul>
+	<li data-dataId='157' data-depth='2' data-url='?depth=2&upPath=004&dataId=157'><span title='157'>157</span></li>
+	</ul>
+</li>
+</ul>
+
+			</li>
+		</ul>
+		<!-- div class="viewer__wrap__img__nav" style="overflow:hidden;">
+			<nav class="viewer viewimg-control" style="position: absolute;left:20px;margin:0">
+				<a class="tree_first_move" title="트리 처음"><img src="/resources/images/btn-viewer-first.png" title="트리 처음" /></a>
+				<a class="tree_prev_move" title="트리 이전"><img src="/resources/images/btn-viewer-prev.png" title="트리 이전" /></a>
+				<a class="tree_next_move" title="트리 다음"><img src="/resources/images/btn-viewer-next.png" title="트리 다음" /></a>
+				<a class="tree_last_move" title="트리 마지막"><img src="/resources/images/btn-viewer-last.png" title="트리 마지막" /></a>
+			</nav>
+		</div -->
+	</div>
+	<div class="viewer__wrap__content">
+	
+		<a class="viewer_navi_map_toggle"><img src="/resources/images/thumb_map.png" title="맵보이기/감추기"></a>
+	
+		<a class="viewimg-toggle_left"></a>
+		<a class="viewimg-toggle_right"></a>
+
+		<a class="viewimg-toggle_bottom1 open"></a>
+		<a class="viewimg-toggle_bottom2 open"></a>
+		
+		<a class="btn__viewer__img__prev enable"></a>
+		<a class="btn__viewer__img__next enable"></a>
+
+		<div id="viewLoading"><img src="/resources/images/loading1.gif"/></div>
+		<div id="viewer" style="position:relative;width:100%;height:100%;background:#f5f6f8;"></div>
+
+		<div class="viewer__wrap__img__nav">
+			<nav class="viewimg-control">
+				<a class="first_move"><img src="/resources/images/btn-viewer-first.png" title="처음" /></a>
+				<a class="prev_move"><img src="/resources/images/btn-viewer-prev.png" title="이전" /></a>
+				<a class="next_move"><img src="/resources/images/btn-viewer-next.png" title="다음" /></a>
+				<a class="last_move"><img src="/resources/images/btn-viewer-last.png" title="마지막" /></a>
+				<div class="control__page page_count">
+					<input type="text" class="imgNum" value="1" />
+					<div class="page--count">/ <span id="navi_img_count">0</span></div>
+					<a class="go gotopage">GO</a>
+				</div>
+				<a class="plus" id="zoom_plus"><img src="/resources/images/btn-viewer-zoomin.png" title="확대" /></a>
+				<a class="minus" id="zoom_minus"><img src="/resources/images/btn-viewer-zoomout.png" title="축소" /></a>
+				<a class="resize" id="zoom_home"><img src="/resources/images/btn-viewer-fit.png" title="화면맞춤" /></a>
+			
+
+				<a onclick="downloadImg('page')" style="margin-left:10px;"><img src="/resources/images/btn-viewer-downimg.png" title="이미지 다운로드" /></a>
+				<a onclick="downloadImg('book')"><img src="/resources/images/btn-viewer-downbook.png" title="책전체 다운로드" /></a>
+				<a class="print"><img src="/resources/images/btn-viewer-print.png" title="인쇄" /></a>
+				
+				
+				<a onclick="sidePaneOpenClose()" style="margin-left:10px"><img src="/resources/images/btn-viewer-opncls.png" title="보조창 열기/닫기" /></a>
+			</nav>
+			
+		</div>
+	</div>
+	
+	<div class="viewer__wrap__text">
+		<div class="viewer__wrap__tree__header">
+			
+			
+	           	<a class="tab heje">해제보기</a>
+           	
+           	<span style="position:absolute;top:37px;right:10px;font-size:12px;border:1px solid #eee; background:#fff;"></span>
+		</div>
+		<div class="viewer__wrap__text_cont" style="overflow:auto;">
+			
+			
+			<div class="viewer__wrap__text__heje" style="display:none;">
+				<a class="btn__list--small c01 debug" style="font-size:0.929rem;margin:5px;" onclick="goXmlView('SJ_JSG','JSG_K1-151')">xml</a>
+				<div class="info-wrap_content line-dot">
+					<h3>기본정보</h3>
+					<style>
+	.tagCont { font-family:"맑은 고딕", "새굴림",Verdana, sans-serif; text-align:justify; line-height: 1.8; }
+	.tagChapter { margin:10px 0; text-align:justify; }
+
+	.tagTit { font-weight:bold; color:#7b95b6; margin:5px 0; }
+	.tagTit.infoMan { font-weight:normal; color:#232427; }
+	
+	.tagChapter { margin:10px 0; text-align:justify; }
+	 
+	.tagPara { /*text-indent:15px;*/ margin:20px 15px; text-align:justify; }
+	.tagPara table { text-indent:0; margin:10px 0;/*width:100%;*/}
+	.tagPara table td {padding:3px 10px; text-indent:0; border:solid 1px #d6d6d6; white-space:normal; word-break:normal;}
+
+	.tagCont span.link_people:not([data-people-uci='']) {cursor:pointer;}
+	.tagCont span.link_people:hover:not([data-people-uci='']) {background-color:#eee; outline:1px solid #ccc;}
+	
+	.tagCont dl {text-indent:-20px; margin-left:20px;}
+	.tagCont dt {font-weight: bold;color: #035d68;}
+	.tagCont dt {font-weight: bold;color: #035d68;}
+	.tagCont dt, .tagCont dd {display:inline;}
+
+	/*div[data-xsl-tag='본문'] {margin:15px 15px;}*/
+	/* 이두:SlateBlue, 관청명:purple, 연도:orange, 관직명:MediumVioletRed, 용어:blue, 인명:green, 지명:#2565af, 서명:magenta, 연호:OrangeRed, 건물명:Olive, 나라명:BlueViolet, 문헌:DeepPink */
+	
+</style><div data-xsl-tag="기본정보" class="tagCont">
+	<dl data-xsl-tag="분류">
+<dt>분 류 : </dt>
+<dd>경부</dd>
+</dl>
+	<dl data-xsl-tag="자료명">
+<dt>자료명 : </dt>
+<dd>중용장구대전(中庸章句大全)</dd>
+</dl>
+	<dl data-xsl-tag="작성주체">
+<dt>작성주체 : </dt>
+<dd>
+		
+		<span data-xsl-tag="인명" data-people-uci="" class="link_people" style="color:#00a651">호광(胡廣)(명(明)) 등(等) 봉칙찬수(奉勅纂修)</span>, <span data-xsl-tag="인명" data-people-uci="" class="link_people" style="color:#00a651">주희(朱熹)(송(宋)) 집주(集註)</span>
+	</dd>
+</dl>
+	
+	<dl data-xsl-tag="작성시기">
+<dt>작성시기 :</dt>
+<dd>1696 / 숙종 22년</dd>
+</dl>
+	<dl data-xsl-tag="형태사항">
+<dt>형태사항 :</dt>
+<dd>크기: 34.8&times;22.4cm
+                                   / 판본: 금속활자본(金屬活字本)(무신자(戊申字)) / 장정: 선장(線裝) / 수량: 1책(冊) / 판식: 반곽(半郭) 25.7×16.9cm / 인장정보: 
+			宣賜之記, 李王家圖書之章
+		</dd>
+</dl>
+	<dl data-xsl-tag="일반주기">
+<dt>일반주기 :</dt>
+<dd>冊次: 單, 全</dd>
+</dl>
+	<dl data-xsl-tag="내용주기">
+<dt>내용주기 :</dt>
+<dd>讀中庸法, 中庸章句序, 中庸章句大全</dd>
+</dl>
+	
+		
+	
+	
+	<dl data-xsl-tag="비고">
+<dt>청구기호 :
+			</dt>
+<dd>K1-151</dd>
+</dl>
+	<dl data-xsl-tag="비고">
+<dt>M/F번호 :
+			</dt>
+<dd>MF35-1844</dd>
+</dl>
+	<dl data-xsl-tag="비고">
+<dt>기록시기 :
+			</dt>
+<dd> 1696年(肅宗 22)頃</dd>
+</dl>
+	<dl data-xsl-tag="소장정보">
+<dt>소장정보 :</dt>
+<dd>한국학중앙연구원 장서각</dd>
+</dl>
+</div>
+		
+				</div>
+			
+				
+				
+
+				
+				
+					<div class="info-wrap_content">
+						<h3>상세정보</h3>
+						<div class="mt10">
+							<style>
+	.tagCont { font-family:"맑은 고딕", "새굴림",Verdana, sans-serif; text-align:justify; line-height: 1.8; }
+	.tagChapter { margin:10px 0; text-align:justify; }
+
+	.tagTit { font-weight:bold; color:#7b95b6; margin:5px 0; }
+	.tagTit.infoMan { font-weight:normal; color:#232427; }
+	
+	.tagChapter { margin:10px 0; text-align:justify; }
+	 
+	.tagPara { /*text-indent:15px;*/ margin:20px 15px; text-align:justify; }
+	.tagPara table { text-indent:0; margin:10px 0;/*width:100%;*/}
+	.tagPara table td {padding:3px 10px; text-indent:0; border:solid 1px #d6d6d6; white-space:normal; word-break:normal;}
+
+	.tagCont span.link_people:not([data-people-uci='']) {cursor:pointer;}
+	.tagCont span.link_people:hover:not([data-people-uci='']) {background-color:#eee; outline:1px solid #ccc;}
+	
+	.tagCont dl {text-indent:-20px; margin-left:20px;}
+	.tagCont dt {font-weight: bold;color: #035d68;}
+	.tagCont dt {font-weight: bold;color: #035d68;}
+	.tagCont dt, .tagCont dd {display:inline;}
+
+	/*div[data-xsl-tag='본문'] {margin:15px 15px;}*/
+	/* 이두:SlateBlue, 관청명:purple, 연도:orange, 관직명:MediumVioletRed, 용어:blue, 인명:green, 지명:#2565af, 서명:magenta, 연호:OrangeRed, 건물명:Olive, 나라명:BlueViolet, 문헌:DeepPink */
+	
+</style><div data-xsl-tag="상세정보" class="tagCont">
+	<div data-xsl-tag="정의" class="tagPara">
+<div style="color: #035d68;font-size:14px;font-weight:bold">정의</div>
+<span data-xsl-tag="나라명" style="color:BlueViolet">명</span>의 <span data-xsl-tag="관직명" style="color:MediumVioletRed">翰林學士</span> <span data-xsl-tag="인명" data-people-uci="" class="link_people" style="color:#00a651">胡廣</span>(1370~1418) 등이 <span data-xsl-tag="인명" data-people-uci="" class="link_people" style="color:#00a651">成祖</span>의 勅命에 따라 <span data-xsl-tag="인명" data-people-uci="" class="link_people" style="color:#00a651">朱熹</span>의 『<span data-xsl-tag="문헌명" style="color:DeepPink">中庸章句</span>』에 <span data-xsl-tag="나라명" style="color:BlueViolet">송</span>·<span data-xsl-tag="나라명" style="color:BlueViolet">원대</span> 학자들이 보충하여 편찬한 『<span data-xsl-tag="문헌명" style="color:DeepPink">中庸</span>』의 주석서이다.</div>
+	
+	
+	<div data-xsl-tag="상세내용" class="tagChapter">
+		
+		<div data-xsl-tag="문단" class="tagPara">
+<div style="color: #035d68;font-size:14px;font-weight:bold">서지사항</div>표지 서명은 中庸章句大全이다. 서근에는 中庸章句大傳 全이라고 적혀 있다. 판심제 부분과 본문에서 틀린 글자는 그 자리를 오려내고 종이를 덧대어 글자를 수정하였다. 현토를 일부 필사한 것이 보인다. 마모가 심하다. 배면지를 사용하였다.</div>
+		<div data-xsl-tag="문단" class="tagPara">
+<div style="color: #035d68;font-size:14px;font-weight:bold">체제 및 내용</div>『<span data-xsl-tag="문헌명" style="color:DeepPink">中庸章句大全</span>』은 <span data-xsl-tag="인명" data-people-uci="G002+AKS-KHF_12C138C885FFFFB1397X0" class="link_people" style="color:#00a651">세종</span> 때 <span data-xsl-tag="나라명" style="color:BlueViolet">명나라</span>로부터 수입하여 <span data-xsl-tag="연도" style="color:orange">1428년</span> 처음으로 간행하였다. 이후에 四書의 다른 책들과 마찬가지로 가장 중요한 서적 중의 하나로 인식되었기 중앙과 지방에서 여러 번 간행을 하여 판본의 종류가 다양하다. <span data-xsl-tag="나라명" style="color:BlueViolet">명</span>의 성조는 <span data-xsl-tag="연도" style="color:orange">1414년</span> <span data-xsl-tag="인명" data-people-uci="" class="link_people" style="color:#00a651">호광</span>을 비롯한 여러 학자들에게 『<span data-xsl-tag="문헌명" style="color:DeepPink">五經大全</span>』·『<span data-xsl-tag="문헌명" style="color:DeepPink">四書大全</span>』·『<span data-xsl-tag="문헌명" style="color:DeepPink">性理大全</span>』 등의 편찬을 명하였고, 이듬해인 <span data-xsl-tag="연도" style="color:orange">1415년</span>에 완성하였다. 이 大全本 經書는 <span data-xsl-tag="나라명" style="color:BlueViolet">충나라</span> 이후 축적된 여러 유학자들의 성리학설을 종합·정리한 것이다.<br>
+『<span data-xsl-tag="문헌명" style="color:DeepPink">중용</span>』은 <span data-xsl-tag="나라명" style="color:BlueViolet">唐代</span> 이전까지는 독립된 책이 아니었으나, <span data-xsl-tag="나라명" style="color:BlueViolet">송</span>의 <span data-xsl-tag="인명" data-people-uci="" class="link_people" style="color:#00a651">司馬光</span>이 『<span data-xsl-tag="문헌명" style="color:DeepPink">中庸大學廣義</span>』 1권을 간행한 이후 대학과 함께 중용의 명칭이 독립적으로 사용되었다. 그리고 <span data-xsl-tag="인명" data-people-uci="" class="link_people" style="color:#00a651">二程</span>에 의해 처음으로 사서의 하나로 존숭되었고, <span data-xsl-tag="인명" data-people-uci="" class="link_people" style="color:#00a651">주희</span>가 『<span data-xsl-tag="문헌명" style="color:DeepPink">사서집주</span>』의 하나로 이 책을 33장으로 나누어 해석하였다.<br>
+본서의 표제는 중용장구대전으로 표기되어 있고, 讀中庸法, 中庸章句序, 中庸章句大全의 세 부분으로 구성되어 있다. <span data-xsl-tag="인명" data-people-uci="" class="link_people" style="color:#00a651">주희</span>의 『<span data-xsl-tag="문헌명" style="color:DeepPink">中庸章句</span>』의 본문과 <span data-xsl-tag="인명" data-people-uci="" class="link_people" style="color:#00a651">주희</span>의 주해, 그리고 <span data-xsl-tag="인명" data-people-uci="" class="link_people" style="color:#00a651">北溪陳氏</span>, <span data-xsl-tag="인명" data-people-uci="" class="link_people" style="color:#00a651">雲峯胡氏</span>, <span data-xsl-tag="인명" data-people-uci="" class="link_people" style="color:#00a651">新安陳氏</span>, <span data-xsl-tag="인명" data-people-uci="" class="link_people" style="color:#00a651">東陽許氏</span>, <span data-xsl-tag="인명" data-people-uci="" class="link_people" style="color:#00a651">西山眞氏</span>, <span data-xsl-tag="인명" data-people-uci="" class="link_people" style="color:#00a651">東窓李氏</span>, <span data-xsl-tag="인명" data-people-uci="" class="link_people" style="color:#00a651">雙峯饒氏</span>, <span data-xsl-tag="인명" data-people-uci="" class="link_people" style="color:#00a651">三山潘氏</span>, <span data-xsl-tag="인명" data-people-uci="" class="link_people" style="color:#00a651">黃氏</span>, <span data-xsl-tag="인명" data-people-uci="" class="link_people" style="color:#00a651">王氏</span>, <span data-xsl-tag="인명" data-people-uci="" class="link_people" style="color:#00a651">延易李氏</span> 등의 다양한 학설을 수록되어 있다. 다양하게 부가된 小註는 『<span data-xsl-tag="문헌명" style="color:DeepPink">중용장구</span>』를 한층 깊이 있게 논의하고 있어서 성리학적 틀에서의 유학을 이해하는 데 자료가 된다.</div>
+	</div>
+<div style="border-bottom:1px dashed #ddd;"></div>
+	
+	<h3 style="margin-top:30px;">참고문헌</h3>
+<div data-xsl-tag="참고문헌" style="margin:10px 15px;">
+		<div data-xsl-tag="문헌">「<span data-xsl-tag="서명" style="color:magenta">조선시대에 간행된 『中庸』의 諸板本에 관한 硏究</span>」, 안현주, 『서지학연구』 32, 한국서지학회, 2005.</div>
+	</div>
+<div style="border-bottom:1px dashed #ddd;"></div>
+</div>
+
+						</div>
+					</div>
+							
+			</div>
+			
+		</div>		
+	</div>
+</div>
+
+<div class="thumbwrap open">
+	<div class="thumb_area">
+		<ul class="thumb_items">
+		
+			<li class ="thumb_item" data-page-id="001" data-page-idx="0">
+				<div class ="item_image_box">
+					
+					
+						<img src="http://jsgimage.aks.ac.kr/thumb/20190404084707182" title="001" />
+					
+					
+					
+					
+				</div>
+			</li>
+		
+			<li class ="thumb_item" data-page-id="002" data-page-idx="1">
+				<div class ="item_image_box">
+					
+					
+						<img src="http://jsgimage.aks.ac.kr/thumb/20190404084718430" title="002" />
+					
+					
+					
+					
+				</div>
+			</li>
+		
+			<li class ="thumb_item" data-page-id="003" data-page-idx="2">
+				<div class ="item_image_box">
+					
+					
+						<img src="http://jsgimage.aks.ac.kr/thumb/20190404084736853" title="003" />
+					
+					
+					
+					
+				</div>
+			</li>
+		
+			<li class ="thumb_item" data-page-id="004" data-page-idx="3">
+				<div class ="item_image_box">
+					
+					
+						<img src="http://jsgimage.aks.ac.kr/thumb/20190404084749224" title="004" />
+					
+					
+					
+					
+				</div>
+			</li>
+		
+			<li class ="thumb_item" data-page-id="005" data-page-idx="4">
+				<div class ="item_image_box">
+					
+					
+						<img src="http://jsgimage.aks.ac.kr/thumb/20190404084801829" title="005" />
+					
+					
+					
+					
+				</div>
+			</li>
+		
+			<li class ="thumb_item" data-page-id="006" data-page-idx="5">
+				<div class ="item_image_box">
+					
+					
+						<img src="http://jsgimage.aks.ac.kr/thumb/20190404084814933" title="006" />
+					
+					
+					
+					
+				</div>
+			</li>
+		
+			<li class ="thumb_item" data-page-id="007" data-page-idx="6">
+				<div class ="item_image_box">
+					
+					
+						<img src="http://jsgimage.aks.ac.kr/thumb/20190404084828645" title="007" />
+					
+					
+					
+					
+				</div>
+			</li>
+		
+			<li class ="thumb_item" data-page-id="008" data-page-idx="7">
+				<div class ="item_image_box">
+					
+					
+						<img src="http://jsgimage.aks.ac.kr/thumb/20190404084841859" title="008" />
+					
+					
+					
+					
+				</div>
+			</li>
+		
+			<li class ="thumb_item" data-page-id="009" data-page-idx="8">
+				<div class ="item_image_box">
+					
+					
+						<img src="http://jsgimage.aks.ac.kr/thumb/20190404084855899" title="009" />
+					
+					
+					
+					
+				</div>
+			</li>
+		
+			<li class ="thumb_item" data-page-id="010" data-page-idx="9">
+				<div class ="item_image_box">
+					
+					
+						<img src="http://jsgimage.aks.ac.kr/thumb/20190404084909783" title="010" />
+					
+					
+					
+					
+				</div>
+			</li>
+		
+			<li class ="thumb_item" data-page-id="011" data-page-idx="10">
+				<div class ="item_image_box">
+					
+					
+						<img src="http://jsgimage.aks.ac.kr/thumb/20190404084922731" title="011" />
+					
+					
+					
+					
+				</div>
+			</li>
+		
+			<li class ="thumb_item" data-page-id="012" data-page-idx="11">
+				<div class ="item_image_box">
+					
+					
+						<img src="http://jsgimage.aks.ac.kr/thumb/20190404084935273" title="012" />
+					
+					
+					
+					
+				</div>
+			</li>
+		
+			<li class ="thumb_item" data-page-id="013" data-page-idx="12">
+				<div class ="item_image_box">
+					
+					
+						<img src="http://jsgimage.aks.ac.kr/thumb/20190404084949204" title="013" />
+					
+					
+					
+					
+				</div>
+			</li>
+		
+			<li class ="thumb_item" data-page-id="014" data-page-idx="13">
+				<div class ="item_image_box">
+					
+					
+						<img src="http://jsgimage.aks.ac.kr/thumb/20190404085003634" title="014" />
+					
+					
+					
+					
+				</div>
+			</li>
+		
+			<li class ="thumb_item" data-page-id="015" data-page-idx="14">
+				<div class ="item_image_box">
+					
+					
+						<img src="http://jsgimage.aks.ac.kr/thumb/20190404085017456" title="015" />
+					
+					
+					
+					
+				</div>
+			</li>
+		
+			<li class ="thumb_item" data-page-id="016" data-page-idx="15">
+				<div class ="item_image_box">
+					
+					
+						<img src="http://jsgimage.aks.ac.kr/thumb/20190404085031028" title="016" />
+					
+					
+					
+					
+				</div>
+			</li>
+		
+			<li class ="thumb_item" data-page-id="017" data-page-idx="16">
+				<div class ="item_image_box">
+					
+					
+						<img src="http://jsgimage.aks.ac.kr/thumb/20190404085043789" title="017" />
+					
+					
+					
+					
+				</div>
+			</li>
+		
+			<li class ="thumb_item" data-page-id="018" data-page-idx="17">
+				<div class ="item_image_box">
+					
+					
+						<img src="http://jsgimage.aks.ac.kr/thumb/20190404085057782" title="018" />
+					
+					
+					
+					
+				</div>
+			</li>
+		
+			<li class ="thumb_item" data-page-id="019" data-page-idx="18">
+				<div class ="item_image_box">
+					
+					
+						<img src="http://jsgimage.aks.ac.kr/thumb/20190404085111681" title="019" />
+					
+					
+					
+					
+				</div>
+			</li>
+		
+			<li class ="thumb_item" data-page-id="020" data-page-idx="19">
+				<div class ="item_image_box">
+					
+					
+						<img src="http://jsgimage.aks.ac.kr/thumb/20190404085125409" title="020" />
+					
+					
+					
+					
+				</div>
+			</li>
+		
+			<li class ="thumb_item" data-page-id="021" data-page-idx="20">
+				<div class ="item_image_box">
+					
+					
+						<img src="http://jsgimage.aks.ac.kr/thumb/20190404085138872" title="021" />
+					
+					
+					
+					
+				</div>
+			</li>
+		
+			<li class ="thumb_item" data-page-id="022" data-page-idx="21">
+				<div class ="item_image_box">
+					
+					
+						<img src="http://jsgimage.aks.ac.kr/thumb/20190404085152694" title="022" />
+					
+					
+					
+					
+				</div>
+			</li>
+		
+			<li class ="thumb_item" data-page-id="023" data-page-idx="22">
+				<div class ="item_image_box">
+					
+					
+						<img src="http://jsgimage.aks.ac.kr/thumb/20190404085206406" title="023" />
+					
+					
+					
+					
+				</div>
+			</li>
+		
+			<li class ="thumb_item" data-page-id="024" data-page-idx="23">
+				<div class ="item_image_box">
+					
+					
+						<img src="http://jsgimage.aks.ac.kr/thumb/20190404085219853" title="024" />
+					
+					
+					
+					
+				</div>
+			</li>
+		
+			<li class ="thumb_item" data-page-id="025" data-page-idx="24">
+				<div class ="item_image_box">
+					
+					
+						<img src="http://jsgimage.aks.ac.kr/thumb/20190404085233738" title="025" />
+					
+					
+					
+					
+				</div>
+			</li>
+		
+			<li class ="thumb_item" data-page-id="026" data-page-idx="25">
+				<div class ="item_image_box">
+					
+					
+						<img src="http://jsgimage.aks.ac.kr/thumb/20190404085247200" title="026" />
+					
+					
+					
+					
+				</div>
+			</li>
+		
+			<li class ="thumb_item" data-page-id="027" data-page-idx="26">
+				<div class ="item_image_box">
+					
+					
+						<img src="http://jsgimage.aks.ac.kr/thumb/20190404085300897" title="027" />
+					
+					
+					
+					
+				</div>
+			</li>
+		
+			<li class ="thumb_item" data-page-id="028" data-page-idx="27">
+				<div class ="item_image_box">
+					
+					
+						<img src="http://jsgimage.aks.ac.kr/thumb/20190404085320257" title="028" />
+					
+					
+					
+					
+				</div>
+			</li>
+		
+			<li class ="thumb_item" data-page-id="029" data-page-idx="28">
+				<div class ="item_image_box">
+					
+					
+						<img src="http://jsgimage.aks.ac.kr/thumb/20190404085334437" title="029" />
+					
+					
+					
+					
+				</div>
+			</li>
+		
+			<li class ="thumb_item" data-page-id="030" data-page-idx="29">
+				<div class ="item_image_box">
+					
+					
+						<img src="http://jsgimage.aks.ac.kr/thumb/20190404085348446" title="030" />
+					
+					
+					
+					
+				</div>
+			</li>
+		
+			<li class ="thumb_item" data-page-id="031" data-page-idx="30">
+				<div class ="item_image_box">
+					
+					
+						<img src="http://jsgimage.aks.ac.kr/thumb/20190404085402096" title="031" />
+					
+					
+					
+					
+				</div>
+			</li>
+		
+			<li class ="thumb_item" data-page-id="032" data-page-idx="31">
+				<div class ="item_image_box">
+					
+					
+						<img src="http://jsgimage.aks.ac.kr/thumb/20190404085415684" title="032" />
+					
+					
+					
+					
+				</div>
+			</li>
+		
+			<li class ="thumb_item" data-page-id="033" data-page-idx="32">
+				<div class ="item_image_box">
+					
+					
+						<img src="http://jsgimage.aks.ac.kr/thumb/20190404085429022" title="033" />
+					
+					
+					
+					
+				</div>
+			</li>
+		
+			<li class ="thumb_item" data-page-id="034" data-page-idx="33">
+				<div class ="item_image_box">
+					
+					
+						<img src="http://jsgimage.aks.ac.kr/thumb/20190404085442750" title="034" />
+					
+					
+					
+					
+				</div>
+			</li>
+		
+			<li class ="thumb_item" data-page-id="035" data-page-idx="34">
+				<div class ="item_image_box">
+					
+					
+						<img src="http://jsgimage.aks.ac.kr/thumb/20190404085455729" title="035" />
+					
+					
+					
+					
+				</div>
+			</li>
+		
+			<li class ="thumb_item" data-page-id="036" data-page-idx="35">
+				<div class ="item_image_box">
+					
+					
+						<img src="http://jsgimage.aks.ac.kr/thumb/20190404085509894" title="036" />
+					
+					
+					
+					
+				</div>
+			</li>
+		
+			<li class ="thumb_item" data-page-id="037" data-page-idx="36">
+				<div class ="item_image_box">
+					
+					
+						<img src="http://jsgimage.aks.ac.kr/thumb/20190404085524215" title="037" />
+					
+					
+					
+					
+				</div>
+			</li>
+		
+			<li class ="thumb_item" data-page-id="038" data-page-idx="37">
+				<div class ="item_image_box">
+					
+					
+						<img src="http://jsgimage.aks.ac.kr/thumb/20190404085537958" title="038" />
+					
+					
+					
+					
+				</div>
+			</li>
+		
+			<li class ="thumb_item" data-page-id="039" data-page-idx="38">
+				<div class ="item_image_box">
+					
+					
+						<img src="http://jsgimage.aks.ac.kr/thumb/20190404085557801" title="039" />
+					
+					
+					
+					
+				</div>
+			</li>
+		
+			<li class ="thumb_item" data-page-id="040" data-page-idx="39">
+				<div class ="item_image_box">
+					
+					
+						<img src="http://jsgimage.aks.ac.kr/thumb/20190404085611623" title="040" />
+					
+					
+					
+					
+				</div>
+			</li>
+		
+			<li class ="thumb_item" data-page-id="041" data-page-idx="40">
+				<div class ="item_image_box">
+					
+					
+						<img src="http://jsgimage.aks.ac.kr/thumb/20190404085625694" title="041" />
+					
+					
+					
+					
+				</div>
+			</li>
+		
+			<li class ="thumb_item" data-page-id="042" data-page-idx="41">
+				<div class ="item_image_box">
+					
+					
+						<img src="http://jsgimage.aks.ac.kr/thumb/20190404085641310" title="042" />
+					
+					
+					
+					
+				</div>
+			</li>
+		
+			<li class ="thumb_item" data-page-id="043" data-page-idx="42">
+				<div class ="item_image_box">
+					
+					
+						<img src="http://jsgimage.aks.ac.kr/thumb/20190404085655303" title="043" />
+					
+					
+					
+					
+				</div>
+			</li>
+		
+			<li class ="thumb_item" data-page-id="044" data-page-idx="43">
+				<div class ="item_image_box">
+					
+					
+						<img src="http://jsgimage.aks.ac.kr/thumb/20190404085708672" title="044" />
+					
+					
+					
+					
+				</div>
+			</li>
+		
+			<li class ="thumb_item" data-page-id="045" data-page-idx="44">
+				<div class ="item_image_box">
+					
+					
+						<img src="http://jsgimage.aks.ac.kr/thumb/20190404085722697" title="045" />
+					
+					
+					
+					
+				</div>
+			</li>
+		
+			<li class ="thumb_item" data-page-id="046" data-page-idx="45">
+				<div class ="item_image_box">
+					
+					
+						<img src="http://jsgimage.aks.ac.kr/thumb/20190404085742134" title="046" />
+					
+					
+					
+					
+				</div>
+			</li>
+		
+			<li class ="thumb_item" data-page-id="047" data-page-idx="46">
+				<div class ="item_image_box">
+					
+					
+						<img src="http://jsgimage.aks.ac.kr/thumb/20190404085801042" title="047" />
+					
+					
+					
+					
+				</div>
+			</li>
+		
+			<li class ="thumb_item" data-page-id="048" data-page-idx="47">
+				<div class ="item_image_box">
+					
+					
+						<img src="http://jsgimage.aks.ac.kr/thumb/20190404085814614" title="048" />
+					
+					
+					
+					
+				</div>
+			</li>
+		
+			<li class ="thumb_item" data-page-id="049" data-page-idx="48">
+				<div class ="item_image_box">
+					
+					
+						<img src="http://jsgimage.aks.ac.kr/thumb/20190404085827312" title="049" />
+					
+					
+					
+					
+				</div>
+			</li>
+		
+			<li class ="thumb_item" data-page-id="050" data-page-idx="49">
+				<div class ="item_image_box">
+					
+					
+						<img src="http://jsgimage.aks.ac.kr/thumb/20190404085841415" title="050" />
+					
+					
+					
+					
+				</div>
+			</li>
+		
+			<li class ="thumb_item" data-page-id="051" data-page-idx="50">
+				<div class ="item_image_box">
+					
+					
+						<img src="http://jsgimage.aks.ac.kr/thumb/20190404085855392" title="051" />
+					
+					
+					
+					
+				</div>
+			</li>
+		
+			<li class ="thumb_item" data-page-id="052" data-page-idx="51">
+				<div class ="item_image_box">
+					
+					
+						<img src="http://jsgimage.aks.ac.kr/thumb/20190404085913145" title="052" />
+					
+					
+					
+					
+				</div>
+			</li>
+		
+			<li class ="thumb_item" data-page-id="053" data-page-idx="52">
+				<div class ="item_image_box">
+					
+					
+						<img src="http://jsgimage.aks.ac.kr/thumb/20190404085927622" title="053" />
+					
+					
+					
+					
+				</div>
+			</li>
+		
+			<li class ="thumb_item" data-page-id="054" data-page-idx="53">
+				<div class ="item_image_box">
+					
+					
+						<img src="http://jsgimage.aks.ac.kr/thumb/20190404085941896" title="054" />
+					
+					
+					
+					
+				</div>
+			</li>
+		
+			<li class ="thumb_item" data-page-id="055" data-page-idx="54">
+				<div class ="item_image_box">
+					
+					
+						<img src="http://jsgimage.aks.ac.kr/thumb/20190404090001053" title="055" />
+					
+					
+					
+					
+				</div>
+			</li>
+		
+			<li class ="thumb_item" data-page-id="056" data-page-idx="55">
+				<div class ="item_image_box">
+					
+					
+						<img src="http://jsgimage.aks.ac.kr/thumb/20190404090014640" title="056" />
+					
+					
+					
+					
+				</div>
+			</li>
+		
+			<li class ="thumb_item" data-page-id="057" data-page-idx="56">
+				<div class ="item_image_box">
+					
+					
+						<img src="http://jsgimage.aks.ac.kr/thumb/20190404090028914" title="057" />
+					
+					
+					
+					
+				</div>
+			</li>
+		
+			<li class ="thumb_item" data-page-id="058" data-page-idx="57">
+				<div class ="item_image_box">
+					
+					
+						<img src="http://jsgimage.aks.ac.kr/thumb/20190404090042830" title="058" />
+					
+					
+					
+					
+				</div>
+			</li>
+		
+			<li class ="thumb_item" data-page-id="059" data-page-idx="58">
+				<div class ="item_image_box">
+					
+					
+						<img src="http://jsgimage.aks.ac.kr/thumb/20190404090056885" title="059" />
+					
+					
+					
+					
+				</div>
+			</li>
+		
+			<li class ="thumb_item" data-page-id="060" data-page-idx="59">
+				<div class ="item_image_box">
+					
+					
+						<img src="http://jsgimage.aks.ac.kr/thumb/20190404090110426" title="060" />
+					
+					
+					
+					
+				</div>
+			</li>
+		
+			<li class ="thumb_item" data-page-id="061" data-page-idx="60">
+				<div class ="item_image_box">
+					
+					
+						<img src="http://jsgimage.aks.ac.kr/thumb/20190404090124669" title="061" />
+					
+					
+					
+					
+				</div>
+			</li>
+		
+			<li class ="thumb_item" data-page-id="062" data-page-idx="61">
+				<div class ="item_image_box">
+					
+					
+						<img src="http://jsgimage.aks.ac.kr/thumb/20190404090138412" title="062" />
+					
+					
+					
+					
+				</div>
+			</li>
+		
+			<li class ="thumb_item" data-page-id="063" data-page-idx="62">
+				<div class ="item_image_box">
+					
+					
+						<img src="http://jsgimage.aks.ac.kr/thumb/20190404090152484" title="063" />
+					
+					
+					
+					
+				</div>
+			</li>
+		
+			<li class ="thumb_item" data-page-id="064" data-page-idx="63">
+				<div class ="item_image_box">
+					
+					
+						<img src="http://jsgimage.aks.ac.kr/thumb/20190404090206633" title="064" />
+					
+					
+					
+					
+				</div>
+			</li>
+		
+			<li class ="thumb_item" data-page-id="065" data-page-idx="64">
+				<div class ="item_image_box">
+					
+					
+						<img src="http://jsgimage.aks.ac.kr/thumb/20190404090220938" title="065" />
+					
+					
+					
+					
+				</div>
+			</li>
+		
+			<li class ="thumb_item" data-page-id="066" data-page-idx="65">
+				<div class ="item_image_box">
+					
+					
+						<img src="http://jsgimage.aks.ac.kr/thumb/20190404090235119" title="066" />
+					
+					
+					
+					
+				</div>
+			</li>
+		
+			<li class ="thumb_item" data-page-id="067" data-page-idx="66">
+				<div class ="item_image_box">
+					
+					
+						<img src="http://jsgimage.aks.ac.kr/thumb/20190404090249455" title="067" />
+					
+					
+					
+					
+				</div>
+			</li>
+		
+			<li class ="thumb_item" data-page-id="068" data-page-idx="67">
+				<div class ="item_image_box">
+					
+					
+						<img src="http://jsgimage.aks.ac.kr/thumb/20190404090303230" title="068" />
+					
+					
+					
+					
+				</div>
+			</li>
+		
+			<li class ="thumb_item" data-page-id="069" data-page-idx="68">
+				<div class ="item_image_box">
+					
+					
+						<img src="http://jsgimage.aks.ac.kr/thumb/20190404090317067" title="069" />
+					
+					
+					
+					
+				</div>
+			</li>
+		
+			<li class ="thumb_item" data-page-id="070" data-page-idx="69">
+				<div class ="item_image_box">
+					
+					
+						<img src="http://jsgimage.aks.ac.kr/thumb/20190404090331169" title="070" />
+					
+					
+					
+					
+				</div>
+			</li>
+		
+			<li class ="thumb_item" data-page-id="071" data-page-idx="70">
+				<div class ="item_image_box">
+					
+					
+						<img src="http://jsgimage.aks.ac.kr/thumb/20190404090345303" title="071" />
+					
+					
+					
+					
+				</div>
+			</li>
+		
+			<li class ="thumb_item" data-page-id="072" data-page-idx="71">
+				<div class ="item_image_box">
+					
+					
+						<img src="http://jsgimage.aks.ac.kr/thumb/20190404090359187" title="072" />
+					
+					
+					
+					
+				</div>
+			</li>
+		
+			<li class ="thumb_item" data-page-id="073" data-page-idx="72">
+				<div class ="item_image_box">
+					
+					
+						<img src="http://jsgimage.aks.ac.kr/thumb/20190404090418562" title="073" />
+					
+					
+					
+					
+				</div>
+			</li>
+		
+			<li class ="thumb_item" data-page-id="074" data-page-idx="73">
+				<div class ="item_image_box">
+					
+					
+						<img src="http://jsgimage.aks.ac.kr/thumb/20190404090432727" title="074" />
+					
+					
+					
+					
+				</div>
+			</li>
+		
+			<li class ="thumb_item" data-page-id="075" data-page-idx="74">
+				<div class ="item_image_box">
+					
+					
+						<img src="http://jsgimage.aks.ac.kr/thumb/20190404090446954" title="075" />
+					
+					
+					
+					
+				</div>
+			</li>
+		
+			<li class ="thumb_item" data-page-id="076" data-page-idx="75">
+				<div class ="item_image_box">
+					
+					
+						<img src="http://jsgimage.aks.ac.kr/thumb/20190404090501057" title="076" />
+					
+					
+					
+					
+				</div>
+			</li>
+		
+			<li class ="thumb_item" data-page-id="077" data-page-idx="76">
+				<div class ="item_image_box">
+					
+					
+						<img src="http://jsgimage.aks.ac.kr/thumb/20190404090515456" title="077" />
+					
+					
+					
+					
+				</div>
+			</li>
+		
+			<li class ="thumb_item" data-page-id="078" data-page-idx="77">
+				<div class ="item_image_box">
+					
+					
+						<img src="http://jsgimage.aks.ac.kr/thumb/20190404090528840" title="078" />
+					
+					
+					
+					
+				</div>
+			</li>
+		
+			<li class ="thumb_item" data-page-id="079" data-page-idx="78">
+				<div class ="item_image_box">
+					
+					
+						<img src="http://jsgimage.aks.ac.kr/thumb/20190404090543130" title="079" />
+					
+					
+					
+					
+				</div>
+			</li>
+		
+			<li class ="thumb_item" data-page-id="080" data-page-idx="79">
+				<div class ="item_image_box">
+					
+					
+						<img src="http://jsgimage.aks.ac.kr/thumb/20190404090556531" title="080" />
+					
+					
+					
+					
+				</div>
+			</li>
+		
+			<li class ="thumb_item" data-page-id="081" data-page-idx="80">
+				<div class ="item_image_box">
+					
+					
+						<img src="http://jsgimage.aks.ac.kr/thumb/20190404090610649" title="081" />
+					
+					
+					
+					
+				</div>
+			</li>
+		
+			<li class ="thumb_item" data-page-id="082" data-page-idx="81">
+				<div class ="item_image_box">
+					
+					
+						<img src="http://jsgimage.aks.ac.kr/thumb/20190404090625157" title="082" />
+					
+					
+					
+					
+				</div>
+			</li>
+		
+			<li class ="thumb_item" data-page-id="083" data-page-idx="82">
+				<div class ="item_image_box">
+					
+					
+						<img src="http://jsgimage.aks.ac.kr/thumb/20190404090639087" title="083" />
+					
+					
+					
+					
+				</div>
+			</li>
+		
+			<li class ="thumb_item" data-page-id="084" data-page-idx="83">
+				<div class ="item_image_box">
+					
+					
+						<img src="http://jsgimage.aks.ac.kr/thumb/20190404090653065" title="084" />
+					
+					
+					
+					
+				</div>
+			</li>
+		
+			<li class ="thumb_item" data-page-id="085" data-page-idx="84">
+				<div class ="item_image_box">
+					
+					
+						<img src="http://jsgimage.aks.ac.kr/thumb/20190404090707027" title="085" />
+					
+					
+					
+					
+				</div>
+			</li>
+		
+			<li class ="thumb_item" data-page-id="086" data-page-idx="85">
+				<div class ="item_image_box">
+					
+					
+						<img src="http://jsgimage.aks.ac.kr/thumb/20190404090721098" title="086" />
+					
+					
+					
+					
+				</div>
+			</li>
+		
+			<li class ="thumb_item" data-page-id="087" data-page-idx="86">
+				<div class ="item_image_box">
+					
+					
+						<img src="http://jsgimage.aks.ac.kr/thumb/20190404090735684" title="087" />
+					
+					
+					
+					
+				</div>
+			</li>
+		
+			<li class ="thumb_item" data-page-id="088" data-page-idx="87">
+				<div class ="item_image_box">
+					
+					
+						<img src="http://jsgimage.aks.ac.kr/thumb/20190404090749225" title="088" />
+					
+					
+					
+					
+				</div>
+			</li>
+		
+			<li class ="thumb_item" data-page-id="089" data-page-idx="88">
+				<div class ="item_image_box">
+					
+					
+						<img src="http://jsgimage.aks.ac.kr/thumb/20190404090803281" title="089" />
+					
+					
+					
+					
+				</div>
+			</li>
+		
+			<li class ="thumb_item" data-page-id="090" data-page-idx="89">
+				<div class ="item_image_box">
+					
+					
+						<img src="http://jsgimage.aks.ac.kr/thumb/20190404090817274" title="090" />
+					
+					
+					
+					
+				</div>
+			</li>
+		
+			<li class ="thumb_item" data-page-id="091" data-page-idx="90">
+				<div class ="item_image_box">
+					
+					
+						<img src="http://jsgimage.aks.ac.kr/thumb/20190404090831454" title="091" />
+					
+					
+					
+					
+				</div>
+			</li>
+		
+			<li class ="thumb_item" data-page-id="092" data-page-idx="91">
+				<div class ="item_image_box">
+					
+					
+						<img src="http://jsgimage.aks.ac.kr/thumb/20190404090845557" title="092" />
+					
+					
+					
+					
+				</div>
+			</li>
+		
+			<li class ="thumb_item" data-page-id="093" data-page-idx="92">
+				<div class ="item_image_box">
+					
+					
+						<img src="http://jsgimage.aks.ac.kr/thumb/20190404090905353" title="093" />
+					
+					
+					
+					
+				</div>
+			</li>
+		
+			<li class ="thumb_item" data-page-id="094" data-page-idx="93">
+				<div class ="item_image_box">
+					
+					
+						<img src="http://jsgimage.aks.ac.kr/thumb/20190404090925150" title="094" />
+					
+					
+					
+					
+				</div>
+			</li>
+		
+			<li class ="thumb_item" data-page-id="095" data-page-idx="94">
+				<div class ="item_image_box">
+					
+					
+						<img src="http://jsgimage.aks.ac.kr/thumb/20190404090939533" title="095" />
+					
+					
+					
+					
+				</div>
+			</li>
+		
+			<li class ="thumb_item" data-page-id="096" data-page-idx="95">
+				<div class ="item_image_box">
+					
+					
+						<img src="http://jsgimage.aks.ac.kr/thumb/20190404090953542" title="096" />
+					
+					
+					
+					
+				</div>
+			</li>
+		
+			<li class ="thumb_item" data-page-id="097" data-page-idx="96">
+				<div class ="item_image_box">
+					
+					
+						<img src="http://jsgimage.aks.ac.kr/thumb/20190404091007566" title="097" />
+					
+					
+					
+					
+				</div>
+			</li>
+		
+			<li class ="thumb_item" data-page-id="098" data-page-idx="97">
+				<div class ="item_image_box">
+					
+					
+						<img src="http://jsgimage.aks.ac.kr/thumb/20190404091021247" title="098" />
+					
+					
+					
+					
+				</div>
+			</li>
+		
+			<li class ="thumb_item" data-page-id="099" data-page-idx="98">
+				<div class ="item_image_box">
+					
+					
+						<img src="http://jsgimage.aks.ac.kr/thumb/20190404091034991" title="099" />
+					
+					
+					
+					
+				</div>
+			</li>
+		
+			<li class ="thumb_item" data-page-id="100" data-page-idx="99">
+				<div class ="item_image_box">
+					
+					
+						<img src="http://jsgimage.aks.ac.kr/thumb/20190404091049265" title="100" />
+					
+					
+					
+					
+				</div>
+			</li>
+		
+			<li class ="thumb_item" data-page-id="101" data-page-idx="100">
+				<div class ="item_image_box">
+					
+					
+						<img src="http://jsgimage.aks.ac.kr/thumb/20190404091102962" title="101" />
+					
+					
+					
+					
+				</div>
+			</li>
+		
+			<li class ="thumb_item" data-page-id="102" data-page-idx="101">
+				<div class ="item_image_box">
+					
+					
+						<img src="http://jsgimage.aks.ac.kr/thumb/20190404091117049" title="102" />
+					
+					
+					
+					
+				</div>
+			</li>
+		
+			<li class ="thumb_item" data-page-id="103" data-page-idx="102">
+				<div class ="item_image_box">
+					
+					
+						<img src="http://jsgimage.aks.ac.kr/thumb/20190404091130948" title="103" />
+					
+					
+					
+					
+				</div>
+			</li>
+		
+			<li class ="thumb_item" data-page-id="104" data-page-idx="103">
+				<div class ="item_image_box">
+					
+					
+						<img src="http://jsgimage.aks.ac.kr/thumb/20190404091144692" title="104" />
+					
+					
+					
+					
+				</div>
+			</li>
+		
+			<li class ="thumb_item" data-page-id="105" data-page-idx="104">
+				<div class ="item_image_box">
+					
+					
+						<img src="http://jsgimage.aks.ac.kr/thumb/20190404091204847" title="105" />
+					
+					
+					
+					
+				</div>
+			</li>
+		
+			<li class ="thumb_item" data-page-id="106" data-page-idx="105">
+				<div class ="item_image_box">
+					
+					
+						<img src="http://jsgimage.aks.ac.kr/thumb/20190404091218716" title="106" />
+					
+					
+					
+					
+				</div>
+			</li>
+		
+			<li class ="thumb_item" data-page-id="107" data-page-idx="106">
+				<div class ="item_image_box">
+					
+					
+						<img src="http://jsgimage.aks.ac.kr/thumb/20190404091233239" title="107" />
+					
+					
+					
+					
+				</div>
+			</li>
+		
+			<li class ="thumb_item" data-page-id="108" data-page-idx="107">
+				<div class ="item_image_box">
+					
+					
+						<img src="http://jsgimage.aks.ac.kr/thumb/20190404091247076" title="108" />
+					
+					
+					
+					
+				</div>
+			</li>
+		
+			<li class ="thumb_item" data-page-id="109" data-page-idx="108">
+				<div class ="item_image_box">
+					
+					
+						<img src="http://jsgimage.aks.ac.kr/thumb/20190404091305874" title="109" />
+					
+					
+					
+					
+				</div>
+			</li>
+		
+			<li class ="thumb_item" data-page-id="110" data-page-idx="109">
+				<div class ="item_image_box">
+					
+					
+						<img src="http://jsgimage.aks.ac.kr/thumb/20190404091318901" title="110" />
+					
+					
+					
+					
+				</div>
+			</li>
+		
+			<li class ="thumb_item" data-page-id="111" data-page-idx="110">
+				<div class ="item_image_box">
+					
+					
+						<img src="http://jsgimage.aks.ac.kr/thumb/20190404091333081" title="111" />
+					
+					
+					
+					
+				</div>
+			</li>
+		
+			<li class ="thumb_item" data-page-id="112" data-page-idx="111">
+				<div class ="item_image_box">
+					
+					
+						<img src="http://jsgimage.aks.ac.kr/thumb/20190404091347963" title="112" />
+					
+					
+					
+					
+				</div>
+			</li>
+		
+			<li class ="thumb_item" data-page-id="113" data-page-idx="112">
+				<div class ="item_image_box">
+					
+					
+						<img src="http://jsgimage.aks.ac.kr/thumb/20190404091406543" title="113" />
+					
+					
+					
+					
+				</div>
+			</li>
+		
+			<li class ="thumb_item" data-page-id="114" data-page-idx="113">
+				<div class ="item_image_box">
+					
+					
+						<img src="http://jsgimage.aks.ac.kr/thumb/20190404091420801" title="114" />
+					
+					
+					
+					
+				</div>
+			</li>
+		
+			<li class ="thumb_item" data-page-id="115" data-page-idx="114">
+				<div class ="item_image_box">
+					
+					
+						<img src="http://jsgimage.aks.ac.kr/thumb/20190404091437509" title="115" />
+					
+					
+					
+					
+				</div>
+			</li>
+		
+			<li class ="thumb_item" data-page-id="116" data-page-idx="115">
+				<div class ="item_image_box">
+					
+					
+						<img src="http://jsgimage.aks.ac.kr/thumb/20190404091457040" title="116" />
+					
+					
+					
+					
+				</div>
+			</li>
+		
+			<li class ="thumb_item" data-page-id="117" data-page-idx="116">
+				<div class ="item_image_box">
+					
+					
+						<img src="http://jsgimage.aks.ac.kr/thumb/20190404091516868" title="117" />
+					
+					
+					
+					
+				</div>
+			</li>
+		
+			<li class ="thumb_item" data-page-id="118" data-page-idx="117">
+				<div class ="item_image_box">
+					
+					
+						<img src="http://jsgimage.aks.ac.kr/thumb/20190404091536134" title="118" />
+					
+					
+					
+					
+				</div>
+			</li>
+		
+			<li class ="thumb_item" data-page-id="119" data-page-idx="118">
+				<div class ="item_image_box">
+					
+					
+						<img src="http://jsgimage.aks.ac.kr/thumb/20190404091549488" title="119" />
+					
+					
+					
+					
+				</div>
+			</li>
+		
+			<li class ="thumb_item" data-page-id="120" data-page-idx="119">
+				<div class ="item_image_box">
+					
+					
+						<img src="http://jsgimage.aks.ac.kr/thumb/20190404091603824" title="120" />
+					
+					
+					
+					
+				</div>
+			</li>
+		
+			<li class ="thumb_item" data-page-id="121" data-page-idx="120">
+				<div class ="item_image_box">
+					
+					
+						<img src="http://jsgimage.aks.ac.kr/thumb/20190404091620984" title="121" />
+					
+					
+					
+					
+				</div>
+			</li>
+		
+			<li class ="thumb_item" data-page-id="122" data-page-idx="121">
+				<div class ="item_image_box">
+					
+					
+						<img src="http://jsgimage.aks.ac.kr/thumb/20190404091634837" title="122" />
+					
+					
+					
+					
+				</div>
+			</li>
+		
+			<li class ="thumb_item" data-page-id="123" data-page-idx="122">
+				<div class ="item_image_box">
+					
+					
+						<img src="http://jsgimage.aks.ac.kr/thumb/20190404091655663" title="123" />
+					
+					
+					
+					
+				</div>
+			</li>
+		
+			<li class ="thumb_item" data-page-id="124" data-page-idx="123">
+				<div class ="item_image_box">
+					
+					
+						<img src="http://jsgimage.aks.ac.kr/thumb/20190404091709219" title="124" />
+					
+					
+					
+					
+				</div>
+			</li>
+		
+			<li class ="thumb_item" data-page-id="125" data-page-idx="124">
+				<div class ="item_image_box">
+					
+					
+						<img src="http://jsgimage.aks.ac.kr/thumb/20190404091722464" title="125" />
+					
+					
+					
+					
+				</div>
+			</li>
+		
+			<li class ="thumb_item" data-page-id="126" data-page-idx="125">
+				<div class ="item_image_box">
+					
+					
+						<img src="http://jsgimage.aks.ac.kr/thumb/20190404091735958" title="126" />
+					
+					
+					
+					
+				</div>
+			</li>
+		
+			<li class ="thumb_item" data-page-id="127" data-page-idx="126">
+				<div class ="item_image_box">
+					
+					
+						<img src="http://jsgimage.aks.ac.kr/thumb/20190404091750154" title="127" />
+					
+					
+					
+					
+				</div>
+			</li>
+		
+			<li class ="thumb_item" data-page-id="128" data-page-idx="127">
+				<div class ="item_image_box">
+					
+					
+						<img src="http://jsgimage.aks.ac.kr/thumb/20190404091803663" title="128" />
+					
+					
+					
+					
+				</div>
+			</li>
+		
+			<li class ="thumb_item" data-page-id="129" data-page-idx="128">
+				<div class ="item_image_box">
+					
+					
+						<img src="http://jsgimage.aks.ac.kr/thumb/20190404091817173" title="129" />
+					
+					
+					
+					
+				</div>
+			</li>
+		
+			<li class ="thumb_item" data-page-id="130" data-page-idx="129">
+				<div class ="item_image_box">
+					
+					
+						<img src="http://jsgimage.aks.ac.kr/thumb/20190404091831135" title="130" />
+					
+					
+					
+					
+				</div>
+			</li>
+		
+			<li class ="thumb_item" data-page-id="131" data-page-idx="130">
+				<div class ="item_image_box">
+					
+					
+						<img src="http://jsgimage.aks.ac.kr/thumb/20190404091845503" title="131" />
+					
+					
+					
+					
+				</div>
+			</li>
+		
+			<li class ="thumb_item" data-page-id="132" data-page-idx="131">
+				<div class ="item_image_box">
+					
+					
+						<img src="http://jsgimage.aks.ac.kr/thumb/20190404091905206" title="132" />
+					
+					
+					
+					
+				</div>
+			</li>
+		
+			<li class ="thumb_item" data-page-id="133" data-page-idx="132">
+				<div class ="item_image_box">
+					
+					
+						<img src="http://jsgimage.aks.ac.kr/thumb/20190404091919277" title="133" />
+					
+					
+					
+					
+				</div>
+			</li>
+		
+			<li class ="thumb_item" data-page-id="134" data-page-idx="133">
+				<div class ="item_image_box">
+					
+					
+						<img src="http://jsgimage.aks.ac.kr/thumb/20190404091932724" title="134" />
+					
+					
+					
+					
+				</div>
+			</li>
+		
+			<li class ="thumb_item" data-page-id="135" data-page-idx="134">
+				<div class ="item_image_box">
+					
+					
+						<img src="http://jsgimage.aks.ac.kr/thumb/20190404091946483" title="135" />
+					
+					
+					
+					
+				</div>
+			</li>
+		
+			<li class ="thumb_item" data-page-id="136" data-page-idx="135">
+				<div class ="item_image_box">
+					
+					
+						<img src="http://jsgimage.aks.ac.kr/thumb/20190404092000913" title="136" />
+					
+					
+					
+					
+				</div>
+			</li>
+		
+			<li class ="thumb_item" data-page-id="137" data-page-idx="136">
+				<div class ="item_image_box">
+					
+					
+						<img src="http://jsgimage.aks.ac.kr/thumb/20190404092014407" title="137" />
+					
+					
+					
+					
+				</div>
+			</li>
+		
+			<li class ="thumb_item" data-page-id="138" data-page-idx="137">
+				<div class ="item_image_box">
+					
+					
+						<img src="http://jsgimage.aks.ac.kr/thumb/20190404092028166" title="138" />
+					
+					
+					
+					
+				</div>
+			</li>
+		
+			<li class ="thumb_item" data-page-id="139" data-page-idx="138">
+				<div class ="item_image_box">
+					
+					
+						<img src="http://jsgimage.aks.ac.kr/thumb/20190404092041707" title="139" />
+					
+					
+					
+					
+				</div>
+			</li>
+		
+			<li class ="thumb_item" data-page-id="140" data-page-idx="139">
+				<div class ="item_image_box">
+					
+					
+						<img src="http://jsgimage.aks.ac.kr/thumb/20190404092055638" title="140" />
+					
+					
+					
+					
+				</div>
+			</li>
+		
+			<li class ="thumb_item" data-page-id="141" data-page-idx="140">
+				<div class ="item_image_box">
+					
+					
+						<img src="http://jsgimage.aks.ac.kr/thumb/20190404092116371" title="141" />
+					
+					
+					
+					
+				</div>
+			</li>
+		
+			<li class ="thumb_item" data-page-id="142" data-page-idx="141">
+				<div class ="item_image_box">
+					
+					
+						<img src="http://jsgimage.aks.ac.kr/thumb/20190404092138538" title="142" />
+					
+					
+					
+					
+				</div>
+			</li>
+		
+			<li class ="thumb_item" data-page-id="143" data-page-idx="142">
+				<div class ="item_image_box">
+					
+					
+						<img src="http://jsgimage.aks.ac.kr/thumb/20190404092151486" title="143" />
+					
+					
+					
+					
+				</div>
+			</li>
+		
+			<li class ="thumb_item" data-page-id="144" data-page-idx="143">
+				<div class ="item_image_box">
+					
+					
+						<img src="http://jsgimage.aks.ac.kr/thumb/20190404092205043" title="144" />
+					
+					
+					
+					
+				</div>
+			</li>
+		
+			<li class ="thumb_item" data-page-id="145" data-page-idx="144">
+				<div class ="item_image_box">
+					
+					
+						<img src="http://jsgimage.aks.ac.kr/thumb/20190404092218459" title="145" />
+					
+					
+					
+					
+				</div>
+			</li>
+		
+			<li class ="thumb_item" data-page-id="146" data-page-idx="145">
+				<div class ="item_image_box">
+					
+					
+						<img src="http://jsgimage.aks.ac.kr/thumb/20190404092232545" title="146" />
+					
+					
+					
+					
+				</div>
+			</li>
+		
+			<li class ="thumb_item" data-page-id="147" data-page-idx="146">
+				<div class ="item_image_box">
+					
+					
+						<img src="http://jsgimage.aks.ac.kr/thumb/20190404092247272" title="147" />
+					
+					
+					
+					
+				</div>
+			</li>
+		
+			<li class ="thumb_item" data-page-id="148" data-page-idx="147">
+				<div class ="item_image_box">
+					
+					
+						<img src="http://jsgimage.aks.ac.kr/thumb/20190404092300860" title="148" />
+					
+					
+					
+					
+				</div>
+			</li>
+		
+			<li class ="thumb_item" data-page-id="149" data-page-idx="148">
+				<div class ="item_image_box">
+					
+					
+						<img src="http://jsgimage.aks.ac.kr/thumb/20190404092319564" title="149" />
+					
+					
+					
+					
+				</div>
+			</li>
+		
+			<li class ="thumb_item" data-page-id="150" data-page-idx="149">
+				<div class ="item_image_box">
+					
+					
+						<img src="http://jsgimage.aks.ac.kr/thumb/20190404092339579" title="150" />
+					
+					
+					
+					
+				</div>
+			</li>
+		
+			<li class ="thumb_item" data-page-id="151" data-page-idx="150">
+				<div class ="item_image_box">
+					
+					
+						<img src="http://jsgimage.aks.ac.kr/thumb/20190404092352340" title="151" />
+					
+					
+					
+					
+				</div>
+			</li>
+		
+			<li class ="thumb_item" data-page-id="152" data-page-idx="151">
+				<div class ="item_image_box">
+					
+					
+						<img src="http://jsgimage.aks.ac.kr/thumb/20190404092405646" title="152" />
+					
+					
+					
+					
+				</div>
+			</li>
+		
+			<li class ="thumb_item" data-page-id="153" data-page-idx="152">
+				<div class ="item_image_box">
+					
+					
+						<img src="http://jsgimage.aks.ac.kr/thumb/20190404092418298" title="153" />
+					
+					
+					
+					
+				</div>
+			</li>
+		
+			<li class ="thumb_item" data-page-id="154" data-page-idx="153">
+				<div class ="item_image_box">
+					
+					
+						<img src="http://jsgimage.aks.ac.kr/thumb/20190404092431823" title="154" />
+					
+					
+					
+					
+				</div>
+			</li>
+		
+			<li class ="thumb_item" data-page-id="155" data-page-idx="154">
+				<div class ="item_image_box">
+					
+					
+						<img src="http://jsgimage.aks.ac.kr/thumb/20190404092445052" title="155" />
+					
+					
+					
+					
+				</div>
+			</li>
+		
+			<li class ="thumb_item" data-page-id="156" data-page-idx="155">
+				<div class ="item_image_box">
+					
+					
+						<img src="http://jsgimage.aks.ac.kr/thumb/20190404092458858" title="156" />
+					
+					
+					
+					
+				</div>
+			</li>
+		
+			<li class ="thumb_item" data-page-id="157" data-page-idx="156">
+				<div class ="item_image_box">
+					
+					
+						<img src="http://jsgimage.aks.ac.kr/thumb/20190404092511541" title="157" />
+					
+					
+					
+					
+				</div>
+			</li>
+		
+		</ul>
+	</div>
+	<a class="thumb_prev_button"><img src="/resources/images/btn_thum_prev.png" title="이전" /></a>
+	<a class="thumb_next_button"><img src="/resources/images/btn_thum_next.png" title="다음" /></a>
+</div>
+
+
+
+
+<style>
+#dlg_print fieldset  {	margin:0px; padding:0; text-align:center; border:0; }
+#dlg_print input input { margin:0px; }
+#dlg_print p { padding:10px 0px; line-height:150%; }
+#dlg_print .imgdir { width:33%; height:100px; float:left; }
+#dlg_print input[type="text"] { border: solid 1px #ccc; height:23px; }
+</style>
+
+<script type="text/javascript">
+function printWebPage(){
+	//$("#dlg_print" ).dialog("open");
+	//window.print();
+
+	// $("#viewer img").attr("src");
+	popWin('/viewer/printImage?cn='+dataJSon.cn+'&vol='+dataJSon.vol+'&imgId='+dataJSon.getCurId()+'&imgPath='+encodeURIComponent(dataJSon.getImagePath()), '_blank', 800, 900);
+}    
+</script>
+
+
+
+
+</div>
+
+</body>
+</html>
